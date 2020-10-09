@@ -8,21 +8,27 @@ import React from 'react'
 import EditableLabel from 'react-inline-editing';
 import { useSelector, useDispatch } from 'react-redux'
 
+import { incrementCounter, decrementCounter } from '../redux/actions/counteractions'
+import { initializeStore } from '../redux/store'
+
 const useCounter = () => {
   const count = useSelector((state) => state.counter.value)
   const dispatch = useDispatch()
   const increment = () =>
-    dispatch({
-      type: 'INCREMENT_COUNTER',
-    })
+    dispatch(incrementCounter())
   const decrement = () =>
-    dispatch({
-      type: 'DECREMENT_COUNTER',
-    })
+    dispatch(decrementCounter())
   return { count, increment, decrement }
 }
 
-export default function Main({ items }) {
+const useData = () => {
+  const okrs = useSelector((state) => state.trello.okr)
+  const tasks = useSelector((state) => state.trello.tasks)
+  return { okrs, tasks }
+}
+
+export default function Main(props) {
+  const { okrs, tasks } = useData()
   const { count, increment, decrement } = useCounter()
 
   return (
@@ -44,8 +50,8 @@ export default function Main({ items }) {
         onFocus={(text) => (console.log(text))}
         onFocusOut={(text) => (console.log(text))}
       />
-      <Trello initialData={okrdata} />
-      <Trello initialData={taskdata} />
+      <Trello initialData={okrs} />
+      <Trello initialData={tasks} />
 
       <div>
         <h1>
@@ -59,4 +65,21 @@ export default function Main({ items }) {
       </footer>
     </div>
   )
+}
+
+export function getServerSideProps() {
+
+  let initData = {
+    trello: {
+      okr: okrdata,
+      tasks: taskdata
+    }
+  }
+
+  const reduxStore = initializeStore(initData)
+  const { dispatch } = reduxStore
+
+  dispatch(incrementCounter())
+
+  return { props: { initialReduxState: reduxStore.getState() } }
 }

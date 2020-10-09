@@ -1,7 +1,10 @@
 import { DECREMENT_COUNTER, INCREMENT_COUNTER } from '../actions/counteractions';
 import { HYDRATE } from 'next-redux-wrapper';
 
-const counterReducer = (state = { value: 0 }, action) => {
+
+const initialState = { value: 0 }
+
+const counterReducer = (state = initialState, action) => {
     switch (action.type) {
         case HYDRATE:
             // Attention! This will overwrite client state! Real apps should use proper reconciliation.
