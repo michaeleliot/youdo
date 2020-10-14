@@ -6,7 +6,7 @@ import { Button } from '@material-ui/core';
 
 export default function Task({ deleteTask, task, index }) {
     return (
-        <Draggable draggableId={task.id} index={index}>
+        <Draggable draggableId={"task-" + task.id} index={index}>
             {
                 (provided, snapshot) => (
                     <div
@@ -16,7 +16,7 @@ export default function Task({ deleteTask, task, index }) {
                         className={snapshot.isDragging ? styles.draggingContainer : styles.container}
                     >
                         <EditableLabel
-                            text={task.content}
+                            text={task.description}
                             labelClassName='myLabelClass'
                             inputClassName='myInputClass'
                             inputWidth='200px'

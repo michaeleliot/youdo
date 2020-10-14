@@ -15,15 +15,9 @@ import column from '../components/column'
 
 const prisma = new PrismaClient();
 
-const useData = () => {
-  const okrs = useSelector((state) => state.trello.okr)
-  const tasks = useSelector((state) => state.trello.tasks)
-  return { okrs, tasks }
-}
 
-const IndexPage = () => {
+const IndexPage = ({ columns }) => {
   const [session, loading] = useSession();
-  const { okrs, tasks } = useData()
 
 
   if (loading) {
@@ -31,7 +25,6 @@ const IndexPage = () => {
   }
 
   if (session) {
-    console.log(session.user)
     return (
       <div>
         <div className={styles.container}>
@@ -52,8 +45,8 @@ const IndexPage = () => {
             onFocus={(text) => (console.log(text))}
             onFocusOut={(text) => (console.log(text))}
           />
-          <Trello initialData={okrs} />
-          <Trello initialData={tasks} />
+          <Trello initialData={columns} />
+          <Trello initialData={taskdata} />
 
           <footer className={styles.footer}>
           </footer>
@@ -82,7 +75,7 @@ export async function getServerSideProps({ req, res }) {
     return { props: { drafts: [] } };
   }
 
-  const columnRequest = await prisma.column.findMany({
+  const columns = await prisma.column.findMany({
     where: {
       owner: { email: session.user.email },
     },
@@ -91,37 +84,5 @@ export async function getServerSideProps({ req, res }) {
     },
   })
 
-  let columnOrder = [columnRequest.map(col => "column-" + col.id)]
-  let columns = {}
-  for (let col of columnRequest) {
-    let name = "column-" + col.id
-    columns[name] = col
-    columns[name].taskIds = col.Task
-    columns[name].name = name
-  }
-  let colTotalCount = columnRequest.length
-
-  const intitialData = {
-    tasks: {
-      'task-1': { column: 'column-1', id: 'task-1', content: 'Take out the garbage' },
-      'task-2': { column: 'column-1', id: 'task-2', content: 'Watch my favorite show' },
-      'task-3': { column: 'column-1', id: 'task-3', content: 'Charge my phone' },
-      'task-4': { column: 'column-1', id: 'task-4', content: 'Cook dinner' },
-    },
-    taskTotalCount: 4,
-    columns,
-    colTotalCount,
-    columnOrder
-  }
-
-  console.log(intitialData.taskIds)
-
-  let initData = {
-    trello: {
-      okr: intitialData,
-      tasks: taskdata
-    }
-  }
-  const reduxStore = initializeStore(initData)
-  return { props: { initialReduxState: reduxStore.getState() } }
+  return { props: { columns: columns } }
 }
