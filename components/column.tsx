@@ -8,7 +8,7 @@ import EditableLabel from 'react-inline-editing';
 function Column({ column, tasks, index, deleteColumn, addTask, deleteTask }) {
     return (
         <React.Fragment>
-            <Draggable draggableId={column.id} index={index}>
+            <Draggable draggableId={column.name} index={index}>
                 {
                     provided => (
                         < div {...provided.draggableProps} ref={provided.innerRef} className={styles.container}>
@@ -27,7 +27,7 @@ function Column({ column, tasks, index, deleteColumn, addTask, deleteTask }) {
                             </div>
 
                             <Button color='secondary' onClick={() => deleteColumn(column.id)}>Delete Column</Button>
-                            <Droppable droppableId={column.id} type='task'>
+                            <Droppable droppableId={column.name} type='task'>
                                 {
                                     (provided, snapshot) => (
                                         <div
@@ -43,7 +43,7 @@ function Column({ column, tasks, index, deleteColumn, addTask, deleteTask }) {
                                     )
                                 }
                             </Droppable>
-                            <Button onClick={() => addTask(column.id)}>Add</Button>
+                            <Button onClick={() => addTask(column.name, column.id)}>Add</Button>
                         </div>
                     )
                 }

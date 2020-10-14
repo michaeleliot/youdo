@@ -2,7 +2,6 @@
 import { useMemo } from 'react'
 import { createStore } from 'redux'
 import rootreducer from './reducers/rootreducer'
-import taskdata from './'
 
 let store
 

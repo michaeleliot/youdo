@@ -6,7 +6,7 @@ import React from 'react'
 import { Button } from '@material-ui/core'
 
 export default function Trello({ initialData }) {
-    let [data, changeData] = useState(initialData)
+    const [data, changeData] = React.useState(initialData)
 
     const onDragEnd = result => {
         const { destination, source, draggableId, type } = result
@@ -98,17 +98,24 @@ export default function Trello({ initialData }) {
         changeData(newData)
     }
 
-    const addTask = (columnName) => {
+    const addTask = async (columnName, columnId) => {
         const taskId = ++data.taskTotalCount
         data.columns[columnName].taskIds.push(`task-${taskId}`)
-        changeData({
+        const body = { description: 'New Description', completed: false, columnId };
+        await fetch(`http://localhost:3000/api/task`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body),
+        });
+        const newData = {
             ...data,
             taskTotalCount: taskId,
             tasks: {
                 ...data.tasks,
                 [`task-${taskId}`]: { column: columnName, id: `task-${taskId}`, content: 'Cook dinner' },
             }
-        })
+        }
+        changeData(newData)
     }
 
     const deleteTask = (taskId, colId) => {
@@ -158,8 +165,14 @@ export default function Trello({ initialData }) {
 
                 </Droppable>
             </DragDropContext>
-            <Button onClick={() => {
+            <Button onClick={async () => {
                 const colId = ++data.colTotalCount
+                const body = { title: 'New Column' };
+                await fetch(`http://localhost:3000/api/column`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(body),
+                });
                 changeData({
                     ...data,
                     columns: {

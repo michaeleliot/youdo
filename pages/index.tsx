@@ -7,19 +7,13 @@ import { TextField, Typography } from '@material-ui/core'
 import React from 'react'
 import EditableLabel from 'react-inline-editing';
 import { useSelector, useDispatch } from 'react-redux'
+import { PrismaClient } from "@prisma/client";
 
-import { incrementCounter, decrementCounter } from '../redux/actions/counteractions'
 import { initializeStore } from '../redux/store'
+import { getSession, signIn, signOut, useSession } from "next-auth/client";
+import column from '../components/column'
 
-const useCounter = () => {
-  const count = useSelector((state) => state.counter.value)
-  const dispatch = useDispatch()
-  const increment = () =>
-    dispatch(incrementCounter())
-  const decrement = () =>
-    dispatch(decrementCounter())
-  return { count, increment, decrement }
-}
+const prisma = new PrismaClient();
 
 const useData = () => {
   const okrs = useSelector((state) => state.trello.okr)
@@ -27,59 +21,107 @@ const useData = () => {
   return { okrs, tasks }
 }
 
-export default function Main(props) {
+const IndexPage = () => {
+  const [session, loading] = useSession();
   const { okrs, tasks } = useData()
-  const { count, increment, decrement } = useCounter()
 
-  return (
-    <div className={styles.container}>
-      <Head>
-        <title>YouDo</title>
-        <link rel="icon" href="/favicon.ico" />
-      </Head>
 
-      <Typography variant="h5"> What gets you up in the morning? </Typography>
-      <EditableLabel
-        text={"I prove myself everyday so that others can reimagine what is possible."}
-        labelClassName='myLabelClass'
-        inputClassName='myInputClass'
-        inputWidth='100%'
-        inputHeight='100%'
-        inputMaxLength={50}
-        inputMin
-        onFocus={(text) => (console.log(text))}
-        onFocusOut={(text) => (console.log(text))}
-      />
-      <Trello initialData={okrs} />
-      <Trello initialData={tasks} />
+  if (loading) {
+    return <div>Loading...</div>;
+  }
 
+  if (session) {
+    console.log(session.user)
+    return (
       <div>
-        <h1>
-          Count: <span>{count}</span>
-        </h1>
-        <button onClick={increment}>+1</button>
-        <button onClick={decrement}>-1</button>
+        <div className={styles.container}>
+          <Head>
+            <title>YouDo</title>
+            <link rel="icon" href="/favicon.ico" />
+          </Head>
+
+          <Typography variant="h5"> What gets {session.user.name} up in the morning? </Typography>
+          <EditableLabel
+            text={"I prove myself everyday so that others can reimagine what is possible."}
+            labelClassName='myLabelClass'
+            inputClassName='myInputClass'
+            inputWidth='100%'
+            inputHeight='100%'
+            inputMaxLength={50}
+            inputMin
+            onFocus={(text) => (console.log(text))}
+            onFocusOut={(text) => (console.log(text))}
+          />
+          <Trello initialData={okrs} />
+          <Trello initialData={tasks} />
+
+          <footer className={styles.footer}>
+          </footer>
+        </div>
+        <button onClick={() => signOut()}>Sign out</button>
       </div>
+    );
+  } else {
+    return (
+      <div>
+        You are not logged in! <br />
+        <button onClick={() => signIn()}>Sign in</button>
+      </div>
+    );
+  }
+};
 
-      <footer className={styles.footer}>
-      </footer>
-    </div>
-  )
-}
+export default IndexPage;
 
-export function getServerSideProps() {
+
+export async function getServerSideProps({ req, res }) {
+  const session = await getSession({ req });
+
+  if (!session) {
+    res.statusCode = 403;
+    return { props: { drafts: [] } };
+  }
+
+  const columnRequest = await prisma.column.findMany({
+    where: {
+      owner: { email: session.user.email },
+    },
+    include: {
+      Task: true
+    },
+  })
+
+  let columnOrder = [columnRequest.map(col => "column-" + col.id)]
+  let columns = {}
+  for (let col of columnRequest) {
+    let name = "column-" + col.id
+    columns[name] = col
+    columns[name].taskIds = col.Task
+    columns[name].name = name
+  }
+  let colTotalCount = columnRequest.length
+
+  const intitialData = {
+    tasks: {
+      'task-1': { column: 'column-1', id: 'task-1', content: 'Take out the garbage' },
+      'task-2': { column: 'column-1', id: 'task-2', content: 'Watch my favorite show' },
+      'task-3': { column: 'column-1', id: 'task-3', content: 'Charge my phone' },
+      'task-4': { column: 'column-1', id: 'task-4', content: 'Cook dinner' },
+    },
+    taskTotalCount: 4,
+    columns,
+    colTotalCount,
+    columnOrder
+  }
+
+  console.log(intitialData.taskIds)
 
   let initData = {
     trello: {
-      okr: okrdata,
+      okr: intitialData,
       tasks: taskdata
     }
   }
-
   const reduxStore = initializeStore(initData)
-  const { dispatch } = reduxStore
-
-  dispatch(incrementCounter())
-
   return { props: { initialReduxState: reduxStore.getState() } }
 }
