@@ -6,10 +6,10 @@ const prisma = new PrismaClient();
 export default async function handle(req, res) {
     const taskId = req.query.id;
     if (req.method === "DELETE") {
-        const task = await prisma.column.delete({
+        const column = await prisma.column.delete({
             where: { id: Number(taskId) },
         });
-        res.json(task);
+        res.json(column);
     } else if (req.method === "PATCH") {
         const task = await prisma.column.update({
             data: req.body,

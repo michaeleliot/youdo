@@ -3,11 +3,21 @@ import styles from '../styles/trello.module.sass'
 import Column from './column'
 import { DragDropContext, Droppable } from 'react-beautiful-dnd'
 import React from 'react'
-import { Button } from '@material-ui/core'
-
+import { Button, Paper } from '@material-ui/core'
+import { useSelector, useDispatch } from 'react-redux'
+import { postTask, postColumn, deleteColumn, deleteTask } from '../redux/actions/counteractions'
+//, deleteColumn as deleteColumnRedux, deleteTask as deleteTaskRedux
 let rerender = 0
 
-export default function Trello({ initialData }) {
+
+
+export default function Trello() {
+    let dispatch = useDispatch()
+    const initialData = useSelector((state) =>
+        state.trello.columns
+    )
+
+
     const onDragEnd = async result => {
         // const { destination, source, draggableId, type } = result;
 
@@ -48,37 +58,6 @@ export default function Trello({ initialData }) {
     const onDragUpdate = update => {
     }
 
-    const addColumn = async () => {
-        const body = { title: 'New Column' };
-        await fetch(`http://localhost:3000/api/column`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(body),
-        });
-    }
-
-    const deleteColumn = async (columnId) => {
-        await fetch(`http://localhost:3000/api/column/${columnId}`, {
-            method: "DELETE",
-            headers: { "Content-Type": "application/json" },
-        });
-    }
-
-    const addTask = async (columnId) => {
-        const body = { description: 'New Task', columnId };
-        await fetch(`http://localhost:3000/api/task`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(body),
-        });
-    }
-
-    const deleteTask = async (taskId) => {
-        await fetch(`http://localhost:3000/api/task/${taskId}`, {
-            method: "DELETE",
-            headers: { "Content-Type": "application/json" },
-        });
-    }
 
 
     return (
@@ -97,7 +76,7 @@ export default function Trello({ initialData }) {
                                 className={styles.columnWrapper} >
                                 {
                                     initialData.map((column, index) => {
-                                        return <Column key={column.id} deleteTask={deleteTask} deleteColumn={deleteColumn} addTask={addTask} index={index} column={column} tasks={column.Task} />
+                                        return <Column key={column.id} deleteTask={(taskId, columnId) => dispatch(deleteTask(taskId, columnId))} deleteColumn={(columnId) => dispatch(deleteColumn(columnId))} addTask={(columnId) => dispatch(postTask(columnId))} index={index} column={column} tasks={column.Task} />
                                     })
                                 }
                                 {provided.placeholder}
@@ -106,8 +85,7 @@ export default function Trello({ initialData }) {
                     }
                 </Droppable>
             </DragDropContext>
-            <Button onClick={() => addColumn()}> New </Button>
+            <Button onClick={() => dispatch(postColumn())}> New </Button>
         </div >
-
     )
 }

@@ -30,6 +30,7 @@
     "react-spring": "^8.0.27",
     "react-use-gesture": "^7.0.16",
     "redux": "^4.0.5",
+    "redux-thunk": "^2.3.0",
     "reset-css": "^5.0.1",
     "sass": "^1.26.11",
     "serverless-mysql": "^1.5.4",

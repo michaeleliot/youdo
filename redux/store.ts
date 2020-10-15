@@ -1,6 +1,7 @@
 
 import { useMemo } from 'react'
-import { createStore } from 'redux'
+import { createStore, applyMiddleware } from 'redux'
+import thunk from 'redux-thunk';
 import rootreducer from './reducers/rootreducer'
 
 let store
@@ -9,7 +10,8 @@ let store
 function initStore(preloadedState) {
     return createStore(
         rootreducer,
-        preloadedState
+        preloadedState,
+        applyMiddleware(thunk)
     )
 }
 

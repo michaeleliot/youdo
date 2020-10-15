@@ -26,8 +26,8 @@ export default function Task({ deleteTask, task, index }) {
                             onFocus={(text) => (console.log(text))}
                             onFocusOut={(text) => (console.log(text))}
                         />
-                        <Button color='secondary' onClick={() => (deleteTask(task.id, task.column))}> Delete </Button>
-                        <Button color='primary' onClick={() => (deleteTask(task.id, task.column))}> Complete </Button>
+                        <Button color='secondary' onClick={() => (deleteTask(task.id, task.columnId))}> Delete </Button>
+                        <Button color='primary' onClick={() => (deleteTask(task.id, task.columnId))}> Complete </Button>
                     </div>
                 )
             }

@@ -1,22 +1,18 @@
 import Head from 'next/head'
 import styles from '../styles/Home.module.css'
 import Trello from '../components/Trello'
-import taskdata from '../components/taskdata'
-import okrdata from '../components/okrdata'
 import { TextField, Typography } from '@material-ui/core'
 import React from 'react'
 import EditableLabel from 'react-inline-editing';
-import { useSelector, useDispatch } from 'react-redux'
 import { PrismaClient } from "@prisma/client";
 
 import { initializeStore } from '../redux/store'
 import { getSession, signIn, signOut, useSession } from "next-auth/client";
-import column from '../components/column'
 
 const prisma = new PrismaClient();
 
 
-const IndexPage = ({ columns }) => {
+const IndexPage = () => {
   const [session, loading] = useSession();
 
 
@@ -45,8 +41,7 @@ const IndexPage = ({ columns }) => {
             onFocus={(text) => (console.log(text))}
             onFocusOut={(text) => (console.log(text))}
           />
-          <Trello initialData={columns} />
-          <Trello initialData={taskdata} />
+          <Trello />
 
           <footer className={styles.footer}>
           </footer>
@@ -83,6 +78,7 @@ export async function getServerSideProps({ req, res }) {
       Task: true
     },
   })
+  const reduxStore = initializeStore({ trello: { columns } })
 
-  return { props: { columns: columns } }
+  return { props: { initialReduxState: reduxStore.getState() } }
 }

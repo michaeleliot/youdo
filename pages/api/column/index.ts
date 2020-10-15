@@ -15,6 +15,9 @@ export default async function handle(req, res) {
             title: title,
             owner: { connect: { email: session?.user?.email } },
         },
+        include: {
+            Task: true
+        },
     });
     res.json(result);
 }
