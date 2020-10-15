@@ -64,13 +64,11 @@ export const deleteTask = (taskId, columnId) => {
 }
 
 export const deleteColumn = (columnId) => {
-    console.log(columnId)
     return (dispatch: Dispatch<any>): void => {
         fetch(`http://localhost:3000/api/column/${columnId}`, {
             method: "DELETE",
             headers: { "Content-Type": "application/json" },
         }).then(() => {
-            console.log("Then statement in delete column", columnId)
             dispatch(removeColumn(columnId))
         }).catch((err) => {
             console.log(err)

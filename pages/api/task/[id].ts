@@ -11,21 +11,12 @@ export default async function handle(req, res) {
         });
         res.json(task);
     } else if (req.method === "PATCH") {
-        const destId = req.body.destId
-        const order = req.body.index
-        await prisma.task.updateMany({
-            data: {
-                order: {
-                    incremenet: 1
-                }
-            },
-            where: { order: { gt: order } },
-        });
-        const task = await prisma.task.update({
-            data: { column: { connect: { id: Number(destId) } } },
+        const { task } = req.body
+        const newTask = await prisma.task.update({
+            data: task,
             where: { id: Number(taskId) },
         });
-        res.json(task);
+        res.json(newTask);
     } else {
         throw new Error(
             `The HTTP ${req.method} method is not supported at this route.`

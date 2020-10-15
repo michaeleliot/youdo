@@ -6,17 +6,25 @@ import React from 'react'
 import { Button, Paper } from '@material-ui/core'
 import { useSelector, useDispatch } from 'react-redux'
 import { postTask, postColumn, deleteColumn, deleteTask } from '../redux/actions/counteractions'
-//, deleteColumn as deleteColumnRedux, deleteTask as deleteTaskRedux
-let rerender = 0
 
-
-
-export default function Trello() {
+function useColumns() {
     let dispatch = useDispatch()
-    const initialData = useSelector((state) =>
+    const columns = useSelector((state) =>
         state.trello.columns
     )
+    const columnObject = useSelector((state) =>
+        state.trello.columnObject
+    )
+    let removeTask = (taskId, columnId) => dispatch(deleteTask(taskId, columnId))
+    let removeColumn = (columnId) => dispatch(deleteColumn(columnId))
+    let addTask = (columnId) => dispatch(postTask(columnId))
+    let addColumn = () => dispatch(postColumn())
+    return { columns, columnObject, removeTask, removeColumn, addTask, addColumn }
 
+}
+
+export default function Trello() {
+    let { columns, columnObject, removeTask, removeColumn, addTask, addColumn } = useColumns()
 
     const onDragEnd = async result => {
         // const { destination, source, draggableId, type } = result;
@@ -75,8 +83,17 @@ export default function Trello() {
                                 ref={provided.innerRef}
                                 className={styles.columnWrapper} >
                                 {
-                                    initialData.map((column, index) => {
-                                        return <Column key={column.id} deleteTask={(taskId, columnId) => dispatch(deleteTask(taskId, columnId))} deleteColumn={(columnId) => dispatch(deleteColumn(columnId))} addTask={(columnId) => dispatch(postTask(columnId))} index={index} column={column} tasks={column.Task} />
+                                    columns.map((columnId, index) => {
+                                        let column = columnObject[columnId]
+                                        return <Column
+                                            key={column.id}
+                                            deleteTask={removeTask}
+                                            deleteColumn={removeColumn}
+                                            addTask={addTask}
+                                            index={index}
+                                            column={column}
+                                            tasks={column.Task}
+                                        />
                                     })
                                 }
                                 {provided.placeholder}
@@ -85,7 +102,7 @@ export default function Trello() {
                     }
                 </Droppable>
             </DragDropContext>
-            <Button onClick={() => dispatch(postColumn())}> New </Button>
+            <Button onClick={addColumn}> New </Button>
         </div >
     )
 }

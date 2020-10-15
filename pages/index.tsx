@@ -78,7 +78,10 @@ export async function getServerSideProps({ req, res }) {
       Task: true
     },
   })
-  const reduxStore = initializeStore({ trello: { columns } })
+
+  const columnObject = {}
+  columns.forEach(column => columnObject[column.id] = column)
+  const reduxStore = initializeStore({ trello: { columns: columns.map(column => column.id), columnObject } })
 
   return { props: { initialReduxState: reduxStore.getState() } }
 }
