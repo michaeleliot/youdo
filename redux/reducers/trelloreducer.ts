@@ -1,14 +1,34 @@
-import { ADD_COLUMN, DELETE_COLUMN, ADD_TASK, DELETE_TASK } from '../actions/counteractions';
+import { UPDATE_TASK_ORDER, ADD_COLUMN, DELETE_COLUMN, ADD_TASK, DELETE_TASK } from '../actions/counteractions';
 import { HYDRATE } from 'next-redux-wrapper';
 
 
-const initialState = { columns: [], columnObject: {} }
+const initialState = { columns: [], columnObject: {}, taskObject: {} }
 
 const trelloReducer = (state = initialState, action) => {
     switch (action.type) {
         case HYDRATE:
             // Attention! This will overwrite client state! Real apps should use proper reconciliation.
             return { ...state, ...action.payload };
+        case UPDATE_TASK_ORDER:
+            const column3 = state.columnObject[action.payload.columnId]
+            const updatingTask = state.taskObject[action.payload.id]
+            let taskCopy = [...column3.Task]
+            taskCopy.splice(updatingTask.position, 1)
+            taskCopy.splice(action.payload.position, 0, updatingTask)
+            return {
+                ...state,
+                taskObject: {
+                    ...state.taskObject,
+                    [action.payload.id]: updatingTask
+                },
+                columnObject: {
+                    ...state.columnObject,
+                    [action.payload.columnId]: {
+                        ...state.columnObject[action.payload.columnId],
+                        Task: taskCopy
+                    }
+                }
+            };
         case ADD_COLUMN:
             return {
                 ...state,
@@ -19,8 +39,8 @@ const trelloReducer = (state = initialState, action) => {
                 }
             };
         case DELETE_COLUMN:
-            let newColumns = new Array(...state.columns)
-            let removeColumnIndex = newColumns.findIndex(col => col.id == action.payload)
+            let newColumns = [...state.columns]
+            let removeColumnIndex = newColumns.findIndex(colId => colId == action.payload)
             newColumns.splice(removeColumnIndex, 1)
             delete state.columnObject[action.payload]
             return {
@@ -35,6 +55,9 @@ const trelloReducer = (state = initialState, action) => {
                 columnObject: {
                     ...state.columnObject,
                     [action.payload.columnId]: column
+                },
+                taskObject: {
+                    [action.payload.id]: action.payload
                 }
             }
         case DELETE_TASK:
@@ -42,6 +65,7 @@ const trelloReducer = (state = initialState, action) => {
             column2.Task.splice(column2.Task.findIndex(task =>
                 task.id == action.payload.taskId
             ), 1)
+            delete state.taskObject[action.payload.taskId]
             return {
                 ...state,
                 columnObject: {

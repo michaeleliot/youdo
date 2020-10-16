@@ -42,7 +42,7 @@ function Column({ column, tasks, index, deleteColumn, addTask, deleteTask }) {
                                 )
                             }
                         </Droppable>
-                        <Button onClick={() => addTask(column.id)}>Add</Button>
+                        <Button onClick={() => addTask(column.id, tasks.length)}>Add</Button>
                     </div>
                 )
             }

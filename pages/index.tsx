@@ -75,13 +75,25 @@ export async function getServerSideProps({ req, res }) {
       owner: { email: session.user.email },
     },
     include: {
-      Task: true
+      Task: { orderBy: { position: "asc" } },
     },
   })
 
   const columnObject = {}
-  columns.forEach(column => columnObject[column.id] = column)
-  const reduxStore = initializeStore({ trello: { columns: columns.map(column => column.id), columnObject } })
+  const taskObject = {}
+  columns.forEach(column => {
+    columnObject[column.id] = column
+    column.Task.forEach((task, index) =>
+      taskObject[task.id] = task
+    )
+  })
+  const reduxStore = initializeStore({
+    trello: {
+      columns: columns.map(column => column.id),
+      columnObject,
+      taskObject
+    }
+  })
 
   return { props: { initialReduxState: reduxStore.getState() } }
 }

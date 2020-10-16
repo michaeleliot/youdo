@@ -3,9 +3,9 @@ import styles from '../styles/trello.module.sass'
 import Column from './column'
 import { DragDropContext, Droppable } from 'react-beautiful-dnd'
 import React from 'react'
-import { Button, Paper } from '@material-ui/core'
+import { Button } from '@material-ui/core'
 import { useSelector, useDispatch } from 'react-redux'
-import { postTask, postColumn, deleteColumn, deleteTask } from '../redux/actions/counteractions'
+import { postTask, postColumn, deleteColumn, deleteTask, updateTask } from '../redux/actions/counteractions'
 
 function useColumns() {
     let dispatch = useDispatch()
@@ -17,47 +17,44 @@ function useColumns() {
     )
     let removeTask = (taskId, columnId) => dispatch(deleteTask(taskId, columnId))
     let removeColumn = (columnId) => dispatch(deleteColumn(columnId))
-    let addTask = (columnId) => dispatch(postTask(columnId))
-    let addColumn = () => dispatch(postColumn())
-    return { columns, columnObject, removeTask, removeColumn, addTask, addColumn }
+    let addTask = (columnId, position) => dispatch(postTask(columnId, position))
+    let addColumn = (position) => dispatch(postColumn(position))
+    let reorderTask = (body) => dispatch(updateTask(body))
+    return { columns, columnObject, removeTask, removeColumn, addTask, addColumn, reorderTask }
 
 }
 
 export default function Trello() {
-    let { columns, columnObject, removeTask, removeColumn, addTask, addColumn } = useColumns()
+    let { columns, columnObject, removeTask, removeColumn, addTask, addColumn, reorderTask } = useColumns()
 
     const onDragEnd = async result => {
-        // const { destination, source, draggableId, type } = result;
+        const { destination, source, draggableId, type } = result;
 
-        // if (!destination) {
-        //     return;
-        // }
+        if (!destination) {
+            return;
+        }
 
-        // if (destination.droppableId === source.droppableId && destination.index === source.index) {
-        //     return;
-        // }
+        if (destination.droppableId === source.droppableId && destination.index === source.index) {
+            return;
+        }
 
-        // if (type == "column") {
-        //     let colId = Number(draggableId.split("-")[1])
-        //     let body = { index: destination.index }
-        //     await fetch(`http://localhost:3000/api/task/${colId}`, {
-        //         method: "PATCH",
-        //         headers: { "Content-Type": "application/json" },
-        //         body: JSON.stringify(body),
-        //     });
-        //     return
-        // }
+        if (type == "column") {
+            // let colId = Number(draggableId.split("-")[1])
+            // let body = { index: destination.index }
+            // await fetch(`http://localhost:3000/api/task/${colId}`, {
+            //     method: "PATCH",
+            //     headers: { "Content-Type": "application/json" },
+            //     body: JSON.stringify(body),
+            // });
+            return
+        }
 
+        let columnId = Number(destination.droppableId.split("-")[1])
+        let taskId = Number(draggableId.split("-")[1])
 
-        // let destId = Number(destination.droppableId.split("-")[1])
-        // let taskId = Number(draggableId.split("-")[1])
+        let body = { id: taskId, columnId, position: destination.index }
+        reorderTask(body)
 
-        // let body = { destId, order: destination.index }
-        // await fetch(`http://localhost:3000/api/task/${taskId}`, {
-        //     method: "PATCH",
-        //     headers: { "Content-Type": "application/json" },
-        //     body: JSON.stringify(body),
-        // });
     }
 
     const onDragStart = () => {
@@ -102,7 +99,7 @@ export default function Trello() {
                     }
                 </Droppable>
             </DragDropContext>
-            <Button onClick={addColumn}> New </Button>
+            <Button onClick={() => addColumn(columns.length)}> New </Button>
         </div >
     )
 }
