@@ -27,6 +27,8 @@ function useColumns() {
 export default function Trello() {
     let { columns, columnObject, removeTask, removeColumn, addTask, addColumn, reorderTask } = useColumns()
 
+    console.log(columns, columnObject)
+
     const onDragEnd = async result => {
         const { destination, source, draggableId, type } = result;
 

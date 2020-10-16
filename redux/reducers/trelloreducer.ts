@@ -14,13 +14,11 @@ const trelloReducer = (state = initialState, action) => {
             const updatingTask = state.taskObject[action.payload.id]
             let taskCopy = [...column3.Task]
             taskCopy.splice(updatingTask.position, 1)
-            taskCopy.splice(action.payload.position, 0, updatingTask)
+            taskCopy.splice(action.payload.position, 0, updatingTask.id)
+            taskCopy.forEach((taskId, index) => state.taskObject[taskId].position = index)
             return {
                 ...state,
-                taskObject: {
-                    ...state.taskObject,
-                    [action.payload.id]: updatingTask
-                },
+                taskObject: state.taskObject,
                 columnObject: {
                     ...state.columnObject,
                     [action.payload.columnId]: {
@@ -49,7 +47,7 @@ const trelloReducer = (state = initialState, action) => {
             }
         case ADD_TASK:
             const column = state.columnObject[action.payload.columnId]
-            column.Task.push(action.payload.task)
+            column.Task.push(action.payload.task.id)
             return {
                 ...state,
                 columnObject: {
@@ -62,8 +60,8 @@ const trelloReducer = (state = initialState, action) => {
             }
         case DELETE_TASK:
             const column2 = state.columnObject[action.payload.columnId]
-            column2.Task.splice(column2.Task.findIndex(task =>
-                task.id == action.payload.taskId
+            column2.Task.splice(column2.Task.findIndex(taskId =>
+                taskId == action.payload.taskId
             ), 1)
             delete state.taskObject[action.payload.taskId]
             return {

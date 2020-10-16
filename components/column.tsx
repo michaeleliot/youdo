@@ -4,8 +4,13 @@ import { Droppable, Draggable } from 'react-beautiful-dnd'
 import React from 'react'
 import { Button } from '@material-ui/core'
 import EditableLabel from 'react-inline-editing';
+import { useSelector } from 'react-redux'
 
 function Column({ column, tasks, index, deleteColumn, addTask, deleteTask }) {
+    const taskObject = useSelector((state) =>
+        state.trello.taskObject
+    )
+    console.log(taskObject)
     return (
         <Draggable draggableId={"column-" + column.id} index={index}>
             {
@@ -34,9 +39,12 @@ function Column({ column, tasks, index, deleteColumn, addTask, deleteTask }) {
                                         ref={provided.innerRef}
                                         className={snapshot.isDraggingOver ? styles.taskListDragging : styles.tasklist}
                                     >
-                                        {tasks.map((task, index) => (
-                                            <Task deleteTask={deleteTask} key={task.id} task={task} index={index}></Task>
-                                        ))}
+                                        {tasks.map((taskId, index) => {
+                                            let task = taskObject[taskId]
+                                            return <Task deleteTask={deleteTask} key={task.id} task={task} index={index}></Task>
+
+                                        }
+                                        )}
                                         {provided.placeholder}
                                     </div>
                                 )

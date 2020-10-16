@@ -86,6 +86,7 @@ export async function getServerSideProps({ req, res }) {
     column.Task.forEach((task, index) =>
       taskObject[task.id] = task
     )
+    column.Task = column.Task.map(task => task.id)
   })
   const reduxStore = initializeStore({
     trello: {
