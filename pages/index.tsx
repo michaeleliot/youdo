@@ -1,15 +1,15 @@
 import Head from 'next/head'
 import styles from '../styles/Home.module.css'
 import Trello from '../components/Trello'
-import { TextField, Typography } from '@material-ui/core'
+import { Typography } from '@material-ui/core'
 import React from 'react'
 import EditableLabel from 'react-inline-editing';
-import { PrismaClient } from "@prisma/client";
+import prisma from "../lib/prisma"
 
 import { initializeStore } from '../redux/store'
 import { getSession, signIn, signOut, useSession } from "next-auth/client";
 
-const prisma = new PrismaClient();
+import { ColumnWithTasks, Task } from '../types'
 
 
 const IndexPage = () => {
@@ -74,19 +74,22 @@ export async function getServerSideProps({ req, res }) {
     where: {
       owner: { email: session.user.email },
     },
+    orderBy: { position: "asc" },
     include: {
       Task: { orderBy: { position: "asc" } },
     },
   })
 
-  const columnObject = {}
-  const taskObject = {}
+  const columnObject: { [key: number]: ColumnWithTasks } = {}
+  const taskObject: { [key: number]: Task } = {}
   columns.forEach(column => {
-    columnObject[column.id] = column
-    column.Task.forEach((task, index) =>
+    columnObject[column.id] = {
+      ...column,
+      Task: column.Task.map(task => task.id)
+    }
+    column.Task.forEach(task =>
       taskObject[task.id] = task
     )
-    column.Task = column.Task.map(task => task.id)
   })
   const reduxStore = initializeStore({
     trello: {

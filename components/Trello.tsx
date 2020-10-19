@@ -1,33 +1,23 @@
-import { useState } from 'react'
 import styles from '../styles/trello.module.sass'
 import Column from './column'
 import { DragDropContext, Droppable } from 'react-beautiful-dnd'
 import React from 'react'
 import { Button } from '@material-ui/core'
 import { useSelector, useDispatch } from 'react-redux'
-import { postTask, postColumn, deleteColumn, deleteTask, updateTask } from '../redux/actions/counteractions'
+import { postColumn, updateTask, updateColumn } from '../redux/actions/counteractions'
 
 function useColumns() {
     let dispatch = useDispatch()
-    const columns = useSelector((state) =>
-        state.trello.columns
-    )
-    const columnObject = useSelector((state) =>
-        state.trello.columnObject
-    )
-    let removeTask = (taskId, columnId) => dispatch(deleteTask(taskId, columnId))
-    let removeColumn = (columnId) => dispatch(deleteColumn(columnId))
-    let addTask = (columnId, position) => dispatch(postTask(columnId, position))
+    const columns = useSelector((state) => state.trello.columns)
+    const columnObject = useSelector((state) => state.trello.columnObject)
     let addColumn = (position) => dispatch(postColumn(position))
     let reorderTask = (body) => dispatch(updateTask(body))
-    return { columns, columnObject, removeTask, removeColumn, addTask, addColumn, reorderTask }
-
+    let reorderColumn = (body) => dispatch(updateColumn(body))
+    return { columns, columnObject, addColumn, reorderTask, reorderColumn }
 }
 
 export default function Trello() {
-    let { columns, columnObject, removeTask, removeColumn, addTask, addColumn, reorderTask } = useColumns()
-
-    console.log(columns, columnObject)
+    let { columns, columnObject, addColumn, reorderTask, reorderColumn } = useColumns()
 
     const onDragEnd = async result => {
         const { destination, source, draggableId, type } = result;
@@ -41,19 +31,14 @@ export default function Trello() {
         }
 
         if (type == "column") {
-            // let colId = Number(draggableId.split("-")[1])
-            // let body = { index: destination.index }
-            // await fetch(`http://localhost:3000/api/task/${colId}`, {
-            //     method: "PATCH",
-            //     headers: { "Content-Type": "application/json" },
-            //     body: JSON.stringify(body),
-            // });
+            let columnId = Number(draggableId.split("-")[1])
+            let body = { id: columnId, position: destination.index }
+            reorderColumn(body)
             return
         }
 
         let columnId = Number(destination.droppableId.split("-")[1])
         let taskId = Number(draggableId.split("-")[1])
-
         let body = { id: taskId, columnId, position: destination.index }
         reorderTask(body)
 
@@ -86,12 +71,8 @@ export default function Trello() {
                                         let column = columnObject[columnId]
                                         return <Column
                                             key={column.id}
-                                            deleteTask={removeTask}
-                                            deleteColumn={removeColumn}
-                                            addTask={addTask}
                                             index={index}
                                             column={column}
-                                            tasks={column.Task}
                                         />
                                     })
                                 }

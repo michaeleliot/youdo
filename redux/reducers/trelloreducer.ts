@@ -1,79 +1,115 @@
-import { UPDATE_TASK_ORDER, ADD_COLUMN, DELETE_COLUMN, ADD_TASK, DELETE_TASK } from '../actions/counteractions';
+import { UPDATE_COLUMN_ORDER, UPDATE_TASK_ORDER, ADD_COLUMN, DELETE_COLUMN, ADD_TASK, DELETE_TASK } from '../actions/counteractions';
 import { HYDRATE } from 'next-redux-wrapper';
+import { ColumnWithTasks, Task } from '../../types';
 
+interface TrelloState {
+    columns: number[],
+    columnObject: {
+        [key: number]: ColumnWithTasks;
+    }
+    taskObject: {
+        [key: number]: Task;
+    }
+}
 
-const initialState = { columns: [], columnObject: {}, taskObject: {} }
+const initialState: TrelloState = { columns: [], columnObject: {}, taskObject: {} }
 
-const trelloReducer = (state = initialState, action) => {
+const trelloReducer = (state = initialState, action): TrelloState => {
     switch (action.type) {
         case HYDRATE:
             // Attention! This will overwrite client state! Real apps should use proper reconciliation.
             return { ...state, ...action.payload };
-        case UPDATE_TASK_ORDER:
-            const column3 = state.columnObject[action.payload.columnId]
-            const updatingTask = state.taskObject[action.payload.id]
-            let taskCopy = [...column3.Task]
+        case UPDATE_TASK_ORDER: {
+            let { task } = action.payload
+            const column = state.columnObject[task.columnId]
+            const updatingTask = state.taskObject[task.id]
+            let taskCopy = [...column.Task]
             taskCopy.splice(updatingTask.position, 1)
-            taskCopy.splice(action.payload.position, 0, updatingTask.id)
+            taskCopy.splice(task.position, 0, updatingTask.id)
             taskCopy.forEach((taskId, index) => state.taskObject[taskId].position = index)
             return {
                 ...state,
                 taskObject: state.taskObject,
                 columnObject: {
                     ...state.columnObject,
-                    [action.payload.columnId]: {
-                        ...state.columnObject[action.payload.columnId],
+                    [column.id]: {
+                        ...state.columnObject[column.id],
                         Task: taskCopy
                     }
                 }
             };
-        case ADD_COLUMN:
+        }
+        case UPDATE_COLUMN_ORDER: {
+            let { column } = action.payload
+            const fullColumn = state.columnObject[column.id]
+            let columnCopy = [...state.columns]
+            columnCopy.splice(fullColumn.position, 1)
+            columnCopy.splice(column.position, 0, fullColumn.id)
+            columnCopy.forEach((columnId, index) => state.columnObject[columnId].position = index)
             return {
                 ...state,
-                columns: [...state.columns, action.payload.id],
+                columns: columnCopy,
                 columnObject: {
                     ...state.columnObject,
-                    [action.payload.id]: action.payload
+                    [column.id]: {
+                        ...state.columnObject[column.id],
+                        position: column.position
+                    }
                 }
             };
-        case DELETE_COLUMN:
-            let newColumns = [...state.columns]
-            let removeColumnIndex = newColumns.findIndex(colId => colId == action.payload)
-            newColumns.splice(removeColumnIndex, 1)
+        }
+        case ADD_COLUMN: {
+            let { column } = action.payload
+            return {
+                ...state,
+                columns: [...state.columns, column.id],
+                columnObject: {
+                    ...state.columnObject,
+                    [column.id]: column
+                }
+            };
+        }
+        case DELETE_COLUMN: {
+            let { columnId } = action.payload
             delete state.columnObject[action.payload]
             return {
                 ...state,
-                columns: newColumns
+                columns: state.columns.filter(colId => colId != columnId)
             }
-        case ADD_TASK:
-            const column = state.columnObject[action.payload.columnId]
-            column.Task.push(action.payload.task.id)
+        }
+        case ADD_TASK: {
+            let { task, columnId } = action.payload
             return {
                 ...state,
                 columnObject: {
                     ...state.columnObject,
-                    [action.payload.columnId]: column
+                    [columnId]: {
+                        ...state.columnObject[columnId],
+                        Task: [...state.columnObject[columnId].Task, task.id]
+                    }
                 },
                 taskObject: {
-                    [action.payload.id]: action.payload
+                    ...state.taskObject,
+                    [task.id]: task
                 }
             }
-        case DELETE_TASK:
-            const column2 = state.columnObject[action.payload.columnId]
-            column2.Task.splice(column2.Task.findIndex(taskId =>
-                taskId == action.payload.taskId
-            ), 1)
-            delete state.taskObject[action.payload.taskId]
+        }
+
+        case DELETE_TASK: {
+            let { columnId, taskId } = action.payload
+            delete state.taskObject[taskId]
             return {
                 ...state,
                 columnObject: {
                     ...state.columnObject,
-                    [action.payload.columnId]: {
-                        ...state.columnObject[action.payload.columnId],
-                        Task: column2.Task
+                    [columnId]: {
+                        ...state.columnObject[columnId],
+                        Task: state.columnObject[columnId].Task.filter(tId => tId != taskId)
                     }
                 }
             }
+        }
+
         default:
             return {
                 ...state

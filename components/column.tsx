@@ -5,12 +5,28 @@ import React from 'react'
 import { Button } from '@material-ui/core'
 import EditableLabel from 'react-inline-editing';
 import { useSelector } from 'react-redux'
+import { postTask, deleteColumn, updateColumn } from '../redux/actions/counteractions'
+import { useDispatch } from 'react-redux'
+import { ColumnWithTasks } from '../types'
 
-function Column({ column, tasks, index, deleteColumn, addTask, deleteTask }) {
-    const taskObject = useSelector((state) =>
-        state.trello.taskObject
-    )
-    console.log(taskObject)
+type ColumnProps = {
+    column: ColumnWithTasks,
+    index: number
+}
+
+function useState() {
+    let dispatch = useDispatch()
+    const taskObject = useSelector((state) => state.trello.taskObject)
+    let updateColumnTitle = (title, column) => dispatch(updateColumn({ ...column, title }))
+    let removeColumn = (columnId) => dispatch(deleteColumn(columnId))
+    let addTask = (columnId, index) => dispatch(postTask(columnId, index))
+    let [currentText, setCurrentText] = React.useState()
+    return { updateColumnTitle, removeColumn, addTask, currentText, setCurrentText, taskObject }
+}
+
+function Column({ column, index }: ColumnProps) {
+    let { updateColumnTitle, removeColumn, addTask, currentText, setCurrentText, taskObject } = useState()
+
     return (
         <Draggable draggableId={"column-" + column.id} index={index}>
             {
@@ -25,12 +41,12 @@ function Column({ column, tasks, index, deleteColumn, addTask, deleteTask }) {
                                 inputHeight='25px'
                                 inputMaxLength={50}
                                 inputMin
-                                onFocus={(text) => (console.log(text))}
-                                onFocusOut={(text) => (console.log(text))}
+                                onFocus={(text) => (setCurrentText(text))}
+                                onFocusOut={(text) => (text != currentText ? updateColumnTitle(text, column) : console.log("Did not update"))}
                             />
                         </div>
 
-                        <Button color='secondary' onClick={() => deleteColumn(column.id)}>Delete Column</Button>
+                        <Button color='secondary' onClick={() => removeColumn(column.id)}>Delete Column</Button>
                         <Droppable droppableId={"column-" + column.id} type='task'>
                             {
                                 (provided, snapshot) => (
@@ -39,18 +55,19 @@ function Column({ column, tasks, index, deleteColumn, addTask, deleteTask }) {
                                         ref={provided.innerRef}
                                         className={snapshot.isDraggingOver ? styles.taskListDragging : styles.tasklist}
                                     >
-                                        {tasks.map((taskId, index) => {
-                                            let task = taskObject[taskId]
-                                            return <Task deleteTask={deleteTask} key={task.id} task={task} index={index}></Task>
+                                        {
+                                            column.Task.map((taskId, index) => {
+                                                let task = taskObject[taskId]
+                                                return <Task key={task.id} task={task} index={index}></Task>
 
+                                            })
                                         }
-                                        )}
                                         {provided.placeholder}
                                     </div>
                                 )
                             }
                         </Droppable>
-                        <Button onClick={() => addTask(column.id, tasks.length)}>Add</Button>
+                        <Button onClick={() => addTask(column.id, column.Task.length)}>Add</Button>
                     </div>
                 )
             }
