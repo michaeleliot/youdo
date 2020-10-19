@@ -10,14 +10,15 @@ function useColumns() {
     let dispatch = useDispatch()
     const columns = useSelector((state) => state.trello.columns)
     const columnObject = useSelector((state) => state.trello.columnObject)
+    const taskObject = useSelector((state) => state.trello.taskObject)
     let addColumn = (position) => dispatch(postColumn(position))
     let reorderTask = (body) => dispatch(updateTask(body))
     let reorderColumn = (body) => dispatch(updateColumn(body))
-    return { columns, columnObject, addColumn, reorderTask, reorderColumn }
+    return { columns, columnObject, taskObject, addColumn, reorderTask, reorderColumn }
 }
 
 export default function Trello() {
-    let { columns, columnObject, addColumn, reorderTask, reorderColumn } = useColumns()
+    let { columns, columnObject, taskObject, addColumn, reorderTask, reorderColumn } = useColumns()
 
     const onDragEnd = async result => {
         const { destination, source, draggableId, type } = result;
@@ -32,15 +33,14 @@ export default function Trello() {
 
         if (type == "column") {
             let columnId = Number(draggableId.split("-")[1])
-            let body = { id: columnId, position: destination.index }
-            reorderColumn(body)
+            let updatedColumn = { ...columnObject[columnId], position: destination.index }
+            reorderColumn(updatedColumn)
             return
         }
 
-        let columnId = Number(destination.droppableId.split("-")[1])
         let taskId = Number(draggableId.split("-")[1])
-        let body = { id: taskId, columnId, position: destination.index }
-        reorderTask(body)
+        let updatedTask = { ...taskObject[taskId], position: destination.index }
+        reorderTask(updatedTask)
 
     }
 

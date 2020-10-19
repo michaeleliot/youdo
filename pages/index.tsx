@@ -14,8 +14,6 @@ import { ColumnWithTasks, Task } from '../types'
 
 const IndexPage = () => {
   const [session, loading] = useSession();
-
-
   if (loading) {
     return <div>Loading...</div>;
   }

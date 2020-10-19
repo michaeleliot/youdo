@@ -20,12 +20,11 @@ function useState() {
     let updateColumnTitle = (title, column) => dispatch(updateColumn({ ...column, title }))
     let removeColumn = (columnId) => dispatch(deleteColumn(columnId))
     let addTask = (columnId, index) => dispatch(postTask(columnId, index))
-    let [currentText, setCurrentText] = React.useState()
-    return { updateColumnTitle, removeColumn, addTask, currentText, setCurrentText, taskObject }
+    return { updateColumnTitle, removeColumn, addTask, taskObject }
 }
 
 function Column({ column, index }: ColumnProps) {
-    let { updateColumnTitle, removeColumn, addTask, currentText, setCurrentText, taskObject } = useState()
+    let { updateColumnTitle, removeColumn, addTask, taskObject } = useState()
 
     return (
         <Draggable draggableId={"column-" + column.id} index={index}>
@@ -41,8 +40,8 @@ function Column({ column, index }: ColumnProps) {
                                 inputHeight='25px'
                                 inputMaxLength={50}
                                 inputMin
-                                onFocus={(text) => (setCurrentText(text))}
-                                onFocusOut={(text) => (text != currentText ? updateColumnTitle(text, column) : console.log("Did not update"))}
+                                onFocus={(text) => (console.log("Cool"))}
+                                onFocusOut={(text) => (column.title != text ? updateColumnTitle(text, column) : console.log("Did not update"))}
                             />
                         </div>
 

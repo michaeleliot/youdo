@@ -13,9 +13,9 @@ export const addTask = (task: Task, columnId: number): ReduxAction => ({
     payload: { task, columnId }
 })
 
-export const removeTask = (taskId: number, columnId: number): ReduxAction => ({
+export const removeTask = (task: Task): ReduxAction => ({
     type: DELETE_TASK,
-    payload: { taskId, columnId }
+    payload: { task }
 })
 
 export const addColumn = (column: ColumnWithTasks): ReduxAction => ({
@@ -91,13 +91,13 @@ export const postColumn = (position: number): any => {
     }
 };
 
-export const deleteTask = (taskId: number, columnId: number) => {
+export const deleteTask = (task: Task) => {
     return (dispatch: Dispatch<any>): void => {
-        fetch(`http://localhost:3000/api/task/${taskId}`, {
+        fetch(`http://localhost:3000/api/task/${task.id}`, {
             method: "DELETE",
             headers: { "Content-Type": "application/json" },
         }).then(() => {
-            dispatch(removeTask(taskId, columnId))
+            dispatch(removeTask(task))
         });
     }
 }

@@ -22,10 +22,10 @@ const trelloReducer = (state = initialState, action): TrelloState => {
         case UPDATE_TASK_ORDER: {
             let { task } = action.payload
             const column = state.columnObject[task.columnId]
-            const updatingTask = state.taskObject[task.id]
+            const oldTask = state.taskObject[task.id]
             let taskCopy = [...column.Task]
-            taskCopy.splice(updatingTask.position, 1)
-            taskCopy.splice(task.position, 0, updatingTask.id)
+            taskCopy.splice(oldTask.position, 1)
+            taskCopy.splice(task.position, 0, oldTask.id)
             taskCopy.forEach((taskId, index) => state.taskObject[taskId].position = index)
             return {
                 ...state,
@@ -41,10 +41,10 @@ const trelloReducer = (state = initialState, action): TrelloState => {
         }
         case UPDATE_COLUMN_ORDER: {
             let { column } = action.payload
-            const fullColumn = state.columnObject[column.id]
+            const oldColumn = state.columnObject[column.id]
             let columnCopy = [...state.columns]
-            columnCopy.splice(fullColumn.position, 1)
-            columnCopy.splice(column.position, 0, fullColumn.id)
+            columnCopy.splice(oldColumn.position, 1)
+            columnCopy.splice(column.position, 0, oldColumn.id)
             columnCopy.forEach((columnId, index) => state.columnObject[columnId].position = index)
             return {
                 ...state,
@@ -96,15 +96,15 @@ const trelloReducer = (state = initialState, action): TrelloState => {
         }
 
         case DELETE_TASK: {
-            let { columnId, taskId } = action.payload
-            delete state.taskObject[taskId]
+            let { task } = action.payload
+            delete state.taskObject[task.id]
             return {
                 ...state,
                 columnObject: {
                     ...state.columnObject,
-                    [columnId]: {
-                        ...state.columnObject[columnId],
-                        Task: state.columnObject[columnId].Task.filter(tId => tId != taskId)
+                    [task.columnId]: {
+                        ...state.columnObject[task.columnId],
+                        Task: state.columnObject[task.columnId].Task.filter(tId => tId != task.id)
                     }
                 }
             }

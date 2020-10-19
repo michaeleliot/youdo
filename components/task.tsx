@@ -15,13 +15,12 @@ type TaskProps = {
 function useState() {
     let dispatch = useDispatch()
     let updateTaskDescription = (description, task) => dispatch(updateTask({ ...task, description }))
-    let removeTask = (taskId, columnId) => dispatch(deleteTask(taskId, columnId))
-    let [currentText, setCurrentText] = React.useState()
-    return { updateTaskDescription, removeTask, currentText, setCurrentText }
+    let removeTask = (task) => dispatch(deleteTask(task))
+    return { updateTaskDescription, removeTask }
 }
 
 export default function TaskView({ task, index }: TaskProps) {
-    let { updateTaskDescription, removeTask, currentText, setCurrentText } = useState()
+    let { updateTaskDescription, removeTask } = useState()
     return (
         <Draggable draggableId={"task-" + task.id} index={index}>
             {
@@ -40,13 +39,13 @@ export default function TaskView({ task, index }: TaskProps) {
                             inputHeight='25px'
                             inputMaxLength={50}
                             inputMin
-                            onFocus={(text) => (setCurrentText(text))}
+                            onFocus={(text) => (console.log("OnFocus"))}
                             onFocusOut={(text) => {
-                                text != currentText ? updateTaskDescription(text, task) : console.log("Did not update")
+                                task.description != text ? updateTaskDescription(text, task) : console.log("Did not update")
                             }}
                         />
-                        <Button color='secondary' onClick={() => (removeTask(task.id, task.columnId))}> Delete </Button>
-                        <Button color='primary' onClick={() => (removeTask(task.id, task.columnId))}> Complete </Button>
+                        <Button color='secondary' onClick={() => (removeTask(task))}> Delete </Button>
+                        <Button color='primary' onClick={() => (removeTask(task))}> Complete </Button>
                     </div>
                 )
             }
