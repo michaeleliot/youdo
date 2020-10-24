@@ -23,21 +23,53 @@ const trelloReducer = (state = initialState, action): TrelloState => {
             let { task } = action.payload
             const column = state.columnObject[task.columnId]
             const oldTask = state.taskObject[task.id]
-            let taskCopy = [...column.Task]
-            taskCopy.splice(oldTask.position, 1)
-            taskCopy.splice(task.position, 0, oldTask.id)
-            taskCopy.forEach((taskId, index) => state.taskObject[taskId].position = index)
-            return {
-                ...state,
-                taskObject: state.taskObject,
-                columnObject: {
-                    ...state.columnObject,
-                    [column.id]: {
-                        ...state.columnObject[column.id],
-                        Task: taskCopy
+            const oldColumn = state.columnObject[oldTask.columnId]
+            if (oldColumn.id != column.id) {
+                let taskCopy = [...column.Task]
+                let oldTaskCopy = [...oldColumn.Task]
+                oldTaskCopy.splice(oldTask.position, 1)
+                taskCopy.splice(task.position, 0, oldTask.id)
+                taskCopy.forEach((taskId, index) => state.taskObject[taskId].position = index)
+                oldTaskCopy.forEach((taskId, index) => state.taskObject[taskId].position = index)
+                return {
+                    ...state,
+                    taskObject: {
+                        ...state.taskObject,
+                        [task.id]: task
+                    },
+                    columnObject: {
+                        ...state.columnObject,
+                        [column.id]: {
+                            ...state.columnObject[column.id],
+                            Task: taskCopy
+                        },
+                        [oldColumn.id]: {
+                            ...state.columnObject[oldColumn.id],
+                            Task: oldTaskCopy
+                        }
                     }
-                }
-            };
+                };
+            } else {
+                let taskCopy = [...column.Task]
+                taskCopy.splice(oldTask.position, 1)
+                taskCopy.splice(task.position, 0, oldTask.id)
+                taskCopy.forEach((taskId, index) => state.taskObject[taskId].position = index)
+                return {
+                    ...state,
+                    taskObject: {
+                        ...state.taskObject,
+                        [task.id]: task
+                    },
+                    columnObject: {
+                        ...state.columnObject,
+                        [column.id]: {
+                            ...state.columnObject[column.id],
+                            Task: taskCopy
+                        }
+                    }
+                };
+            }
+
         }
         case UPDATE_COLUMN_ORDER: {
             let { column } = action.payload

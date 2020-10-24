@@ -39,7 +39,8 @@ export default function Trello() {
         }
 
         let taskId = Number(draggableId.split("-")[1])
-        let updatedTask = { ...taskObject[taskId], position: destination.index }
+        let columnId = Number(destination.droppableId.split("-")[1])
+        let updatedTask = { ...taskObject[taskId], position: destination.index, columnId }
         reorderTask(updatedTask)
 
     }

@@ -10,49 +10,77 @@ export default async function handle(req, res) {
         });
         res.json(task);
     } else if (req.method === "PATCH") {
-        const { description, position: newPosition } = req.body
+        const { description, completed, position: newPosition, columnId: newColumnId } = req.body
         const task = await prisma.task.findOne({
             where: { id: Number(taskId) },
         });
         const oldPosition = task.position
-        const columnId = task.columnId
-
-        if (oldPosition < newPosition) {
+        const oldColumnId = task.columnId
+        if (oldColumnId != newColumnId) {
             await prisma.task.updateMany({
                 data: { position: { decrement: 1 } },
                 where: {
                     columnId: {
-                        equals: columnId,
+                        equals: oldColumnId,
                     },
                     position: {
                         gt: oldPosition,
-                        lte: newPosition
                     }
                 },
             });
-        } else if (oldPosition > newPosition) {
             await prisma.task.updateMany({
                 data: { position: { increment: 1 } },
                 where: {
                     columnId: {
-                        equals: columnId,
+                        equals: newColumnId,
                     },
                     position: {
-                        lt: oldPosition,
-                        gte: newPosition
+                        gte: newPosition,
                     }
                 },
             });
+
+        } else {
+            if (oldPosition < newPosition) {
+                await prisma.task.updateMany({
+                    data: { position: { decrement: 1 } },
+                    where: {
+                        columnId: {
+                            equals: newColumnId,
+                        },
+                        position: {
+                            gt: oldPosition,
+                            lte: newPosition
+                        }
+                    },
+                });
+            } else if (oldPosition > newPosition) {
+                await prisma.task.updateMany({
+                    data: { position: { increment: 1 } },
+                    where: {
+                        columnId: {
+                            equals: newColumnId,
+                        },
+                        position: {
+                            lt: oldPosition,
+                            gte: newPosition
+                        }
+                    },
+                });
+            }
         }
 
         const newTask = await prisma.task.update({
             data: {
                 description,
-                position: newPosition
+                completed,
+                position: newPosition,
+                column: { connect: { id: Number(newColumnId) } },
             },
             where: { id: Number(taskId) },
         });
         res.json(newTask);
+
     } else {
         throw new Error(
             `The HTTP ${req.method} method is not supported at this route.`
