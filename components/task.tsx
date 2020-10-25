@@ -3,7 +3,7 @@ import { Draggable } from 'react-beautiful-dnd'
 import React from 'react'
 import EditableLabel from 'react-inline-editing';
 import { Button } from '@material-ui/core';
-import { deleteTask, updateTask } from '../redux/actions/counteractions';
+import { deleteTask, updateTask } from '../redux/actions/trelloactions';
 import { useDispatch } from 'react-redux'
 import { Task } from '../types';
 

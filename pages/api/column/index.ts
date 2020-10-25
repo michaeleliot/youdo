@@ -8,11 +8,18 @@ export default async function handle(req, res) {
     const { title, position } = req.body;
 
     const session = await getSession({ req });
+    let tasks = []
+    for (let i = 0; i < 10; i++) {
+        tasks.push({ hidden: true })
+    }
     const result = await prisma.column.create({
         data: {
             title: title,
             owner: { connect: { email: session?.user?.email } },
             position,
+            Task: {
+                create: tasks
+            }
         },
         include: {
             Task: true

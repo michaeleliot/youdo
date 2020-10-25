@@ -5,7 +5,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
+  url = "***"
 }
 
 model Account {
@@ -74,11 +74,10 @@ model Task {
 }
 
 model Column {
-  id       Int      @id @default(autoincrement())
+  id       Int     @id @default(autoincrement())
   title    String?
-  owner    User?    @relation(fields: [userId], references: [id])
+  owner    User?   @relation(fields: [userId], references: [id])
   userId   Int?
   Task     Task[]
   position Int?
-  hidden   Boolean? @default(true)
 }

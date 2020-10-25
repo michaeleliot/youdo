@@ -68,7 +68,7 @@ export async function getServerSideProps({ req, res }) {
     return { props: { drafts: [] } };
   }
 
-  const columns = await prisma.column.findMany({
+  let columns = await prisma.column.findMany({
     where: {
       owner: { email: session.user.email },
     },
@@ -78,12 +78,42 @@ export async function getServerSideProps({ req, res }) {
     },
   })
 
+  if (!columns.length) {
+    let tasks = []
+    for (let i = 0; i < 10; i++) {
+      tasks.push({ hidden: true })
+    }
+    let hiddenColumns = []
+    for (let i = 0; i < 10; i++) {
+      hiddenColumns.push({
+        title: "New Column",
+        Task: {
+          create: tasks
+        }
+      })
+    }
+    let defaultUser = await prisma.user.update({
+      where: { email: session.user.email },
+      data: {
+        Column: {
+          create: hiddenColumns,
+        },
+      },
+      include: {
+        Column: { orderBy: { position: "asc" }, include: { Task: {} } },
+      },
+    })
+    columns = defaultUser.Column
+  }
+
+
   const columnObject: { [key: number]: ColumnWithTasks } = {}
   const taskObject: { [key: number]: Task } = {}
   columns.forEach(column => {
     columnObject[column.id] = {
       ...column,
-      Task: column.Task.map(task => task.id)
+      Task: column.Task.filter(task => !task.hidden).map(task => task.id),
+      hiddenTasks: column.Task.filter(task => task.hidden).map(task => task.id)
     }
     column.Task.forEach(task =>
       taskObject[task.id] = task
@@ -92,7 +122,8 @@ export async function getServerSideProps({ req, res }) {
 
   const reduxStore = initializeStore({
     trello: {
-      columns: columns.map(column => column.id),
+      columns: columns.filter(column => !column.hidden).map(column => column.id),
+      hiddenColumns: columns.filter(column => column.hidden).map(column => column.id),
       columnObject,
       taskObject
     }

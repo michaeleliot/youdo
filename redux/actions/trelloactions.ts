@@ -7,10 +7,23 @@ export const DELETE_COLUMN = "DELETE_COLUMN";
 export const DELETE_TASK = "DELETE_TASK";
 export const UPDATE_TASK_ORDER = "UPDATE_TASK_ORDER";
 export const UPDATE_COLUMN_ORDER = "UPDATE_COLUMN_ORDER";
+export const ADD_HIDDEN_TASK = "ADD_HIDDEN_TASK";
+export const ADD_HIDDEN_COLUMN = "ADD_HIDDEN_COLUMN";
 
-export const addTask = (task: Task, columnId: number): ReduxAction => ({
+
+export const addTask = (task: Task): ReduxAction => ({
     type: ADD_TASK,
-    payload: { task, columnId }
+    payload: { task }
+})
+
+export const addHiddenTask = (task: Task): ReduxAction => ({
+    type: ADD_HIDDEN_TASK,
+    payload: { task }
+})
+
+export const addHiddenColumn = (column: Task): ReduxAction => ({
+    type: ADD_HIDDEN_COLUMN,
+    payload: { column }
 })
 
 export const removeTask = (task: Task): ReduxAction => ({
@@ -38,18 +51,20 @@ export const changeColumnOrder = (column: ColumnWithTasks): ReduxAction => ({
     payload: { column }
 })
 
-export const postTask = (columnId: number, position: number): any => {
-    const body = { columnId, description: "New Task", position }
+export const postTask = (task: Task): any => {
+    const body = { ...task, hidden: false }
+    console.log("post task", task, body)
     return (dispatch: Dispatch<any>): void => {
-        fetch(`http://localhost:3000/api/task`, {
-            method: "POST",
+        dispatch(addTask(body))
+        fetch(`http://localhost:3000/api/task/${task.id}`, {
+            method: "PATCH",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(body),
         }).then(data => {
             return data.json()
-        }).then(json => {
-            dispatch(addTask(json, columnId))
-        });
+        }).then(data => {
+            dispatch(addHiddenTask(data))
+        })
     }
 };
 
@@ -76,39 +91,39 @@ export const updateColumn = (column: ColumnWithTasks): any => {
 };
 
 
-export const postColumn = (position: number): any => {
-    const body = { title: 'New Column', position };
+export const postColumn = (column: ColumnWithTasks): any => {
     return (dispatch: Dispatch<any>): void => {
-        fetch(`http://localhost:3000/api/column`, {
-            method: "POST",
+        dispatch(addColumn(column))
+        fetch(`http://localhost:3000/api/column/${column.id}`, {
+            method: "PATCH",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(body),
+            body: JSON.stringify(column),
         }).then(data => {
             return data.json()
-        }).then(json => {
-            dispatch(addColumn(json))
-        });;
+        }).then(data => {
+            dispatch(addHiddenColumn(data))
+        })
     }
 };
 
 export const deleteTask = (task: Task) => {
     return (dispatch: Dispatch<any>): void => {
+        dispatch(removeTask(task))
         fetch(`http://localhost:3000/api/task/${task.id}`, {
             method: "DELETE",
             headers: { "Content-Type": "application/json" },
-        }).then(() => {
-            dispatch(removeTask(task))
+        }).catch((err) => {
+            console.log("Delete Task", err)
         });
     }
 }
 
 export const deleteColumn = (columnId: number) => {
     return (dispatch: Dispatch<any>): void => {
+        dispatch(removeColumn(columnId))
         fetch(`http://localhost:3000/api/column/${columnId}`, {
             method: "DELETE",
             headers: { "Content-Type": "application/json" },
-        }).then(() => {
-            dispatch(removeColumn(columnId))
         }).catch((err) => {
             console.log("Delete Column", err)
         });

@@ -10,7 +10,7 @@ export default async function handle(req, res) {
         });
         res.json(task);
     } else if (req.method === "PATCH") {
-        const { description, completed, position: newPosition, columnId: newColumnId } = req.body
+        const { description, completed, position: newPosition, columnId: newColumnId, hidden } = req.body
         const task = await prisma.task.findOne({
             where: { id: Number(taskId) },
         });
@@ -39,8 +39,7 @@ export default async function handle(req, res) {
                     }
                 },
             });
-
-        } else {
+        } else if (newPosition != null && oldPosition != null) {
             if (oldPosition < newPosition) {
                 await prisma.task.updateMany({
                     data: { position: { decrement: 1 } },
@@ -69,9 +68,9 @@ export default async function handle(req, res) {
                 });
             }
         }
-
         const newTask = await prisma.task.update({
             data: {
+                hidden,
                 description,
                 completed,
                 position: newPosition,
@@ -79,7 +78,16 @@ export default async function handle(req, res) {
             },
             where: { id: Number(taskId) },
         });
-        res.json(newTask);
+        if (hidden != task.hidden) {
+            const replacementTask = await prisma.task.create({
+                data: {
+                    column: { connect: { id: Number(newColumnId) } }
+                }
+            });
+            res.json(replacementTask);
+        } else {
+            res.json(newTask);
+        }
 
     } else {
         throw new Error(

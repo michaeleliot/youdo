@@ -1,0 +1,67 @@
+{
+  "version": "0.3.14-fixed",
+  "steps": [
+    {
+      "tag": "CreateField",
+      "model": "Task",
+      "field": "hidden",
+      "type": "Boolean",
+      "arity": "Required"
+    },
+    {
+      "tag": "CreateDirective",
+      "location": {
+        "path": {
+          "tag": "Field",
+          "model": "Task",
+          "field": "hidden"
+        },
+        "directive": "default"
+      }
+    },
+    {
+      "tag": "CreateArgument",
+      "location": {
+        "tag": "Directive",
+        "path": {
+          "tag": "Field",
+          "model": "Task",
+          "field": "hidden"
+        },
+        "directive": "default"
+      },
+      "argument": "",
+      "value": "true"
+    },
+    {
+      "tag": "UpdateField",
+      "model": "Task",
+      "field": "description",
+      "arity": "Optional"
+    },
+    {
+      "tag": "UpdateField",
+      "model": "Task",
+      "field": "completed",
+      "arity": "Optional"
+    },
+    {
+      "tag": "UpdateField",
+      "model": "Task",
+      "field": "position",
+      "arity": "Optional"
+    },
+    {
+      "tag": "UpdateField",
+      "model": "Column",
+      "field": "title",
+      "arity": "Optional"
+    },
+    {
+      "tag": "UpdateField",
+      "model": "Column",
+      "field": "position",
+      "arity": "Optional"
+    }
+  ]
+}

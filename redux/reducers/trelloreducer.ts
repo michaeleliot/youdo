@@ -1,9 +1,10 @@
-import { UPDATE_COLUMN_ORDER, UPDATE_TASK_ORDER, ADD_COLUMN, DELETE_COLUMN, ADD_TASK, DELETE_TASK } from '../actions/counteractions';
+import { UPDATE_COLUMN_ORDER, UPDATE_TASK_ORDER, ADD_COLUMN, DELETE_COLUMN, ADD_TASK, DELETE_TASK, ADD_HIDDEN_TASK, ADD_HIDDEN_COLUMN } from '../actions/trelloactions';
 import { HYDRATE } from 'next-redux-wrapper';
 import { ColumnWithTasks, Task } from '../../types';
 
 interface TrelloState {
     columns: number[],
+    hiddenColumns: number[],
     columnObject: {
         [key: number]: ColumnWithTasks;
     }
@@ -12,7 +13,7 @@ interface TrelloState {
     }
 }
 
-const initialState: TrelloState = { columns: [], columnObject: {}, taskObject: {} }
+const initialState: TrelloState = { columns: [], hiddenColumns: [], columnObject: {}, taskObject: {} }
 
 const trelloReducer = (state = initialState, action): TrelloState => {
     switch (action.type) {
@@ -101,23 +102,39 @@ const trelloReducer = (state = initialState, action): TrelloState => {
                 }
             };
         }
+        case ADD_HIDDEN_COLUMN: {
+            let { column } = action.payload
+            console.log("ADD Hidden Column", column)
+            return {
+                ...state,
+                hiddenColumns: [...state.hiddenColumns, column.id],
+                columnObject: {
+                    ...state.columnObject,
+                    [column.id]: {
+                        ...column,
+                        Task: [],
+                        hiddenTasks: column.Task
+                    }
+                }
+            };
+        }
         case DELETE_COLUMN: {
             let { columnId } = action.payload
-            delete state.columnObject[action.payload]
+            delete state.columnObject[columnId]
             return {
                 ...state,
                 columns: state.columns.filter(colId => colId != columnId)
             }
         }
         case ADD_TASK: {
-            let { task, columnId } = action.payload
+            let { task } = action.payload
             return {
                 ...state,
                 columnObject: {
                     ...state.columnObject,
-                    [columnId]: {
-                        ...state.columnObject[columnId],
-                        Task: [...state.columnObject[columnId].Task, task.id]
+                    [task.columnId]: {
+                        ...state.columnObject[task.columnId],
+                        Task: [...state.columnObject[task.columnId].Task, task.id]
                     }
                 },
                 taskObject: {
@@ -127,6 +144,23 @@ const trelloReducer = (state = initialState, action): TrelloState => {
             }
         }
 
+        case ADD_HIDDEN_TASK: {
+            let { task } = action.payload
+            return {
+                ...state,
+                columnObject: {
+                    ...state.columnObject,
+                    [task.columnId]: {
+                        ...state.columnObject[task.columnId],
+                        hiddenTasks: [...state.columnObject[task.columnId].hiddenTasks, task.id]
+                    }
+                },
+                taskObject: {
+                    ...state.taskObject,
+                    [task.id]: task
+                }
+            }
+        }
         case DELETE_TASK: {
             let { task } = action.payload
             delete state.taskObject[task.id]
