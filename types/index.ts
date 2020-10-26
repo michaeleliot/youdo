@@ -8,3 +8,6 @@ export interface ReduxAction {
 }
 
 export type Task = TaskType
+
+export type ColumnReduxAction = (column: ColumnWithTasks) => ReduxAction;
+export type TaskReduxAction = (column: Task) => ReduxAction;

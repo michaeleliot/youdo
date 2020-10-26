@@ -1,6 +1,7 @@
-import { UPDATE_COLUMN_ORDER, UPDATE_TASK_ORDER, ADD_COLUMN, DELETE_COLUMN, ADD_TASK, DELETE_TASK, ADD_HIDDEN_TASK, ADD_HIDDEN_COLUMN } from '../actions/trelloactions';
 import { HYDRATE } from 'next-redux-wrapper';
 import { ColumnWithTasks, Task } from '../../types';
+import { UPDATE_TASK_ORDER, ADD_TASK, ADD_HIDDEN_TASK, DELETE_TASK } from '../actions/taskActions';
+import { UPDATE_COLUMN_ORDER, ADD_COLUMN, ADD_HIDDEN_COLUMN, DELETE_COLUMN } from '../actions/columnActions';
 
 interface TrelloState {
     columns: number[],
@@ -118,11 +119,11 @@ const trelloReducer = (state = initialState, action): TrelloState => {
             };
         }
         case DELETE_COLUMN: {
-            let { columnId } = action.payload
-            delete state.columnObject[columnId]
+            let { column } = action.payload
+            delete state.columnObject[column.id]
             return {
                 ...state,
-                columns: state.columns.filter(colId => colId != columnId)
+                columns: state.columns.filter(colId => colId != column.id)
             }
         }
         case ADD_TASK: {

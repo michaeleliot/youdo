@@ -3,7 +3,7 @@ import { Draggable } from 'react-beautiful-dnd'
 import React from 'react'
 import EditableLabel from 'react-inline-editing';
 import { Button } from '@material-ui/core';
-import { deleteTask, updateTask } from '../redux/actions/trelloactions';
+import { deleteTask, patchTask } from '../redux/actions/taskActions';
 import { useDispatch } from 'react-redux'
 import { Task } from '../types';
 
@@ -14,8 +14,8 @@ type TaskProps = {
 
 function useState() {
     let dispatch = useDispatch()
-    let updateTaskDescription = (description, task) => dispatch(updateTask({ ...task, description }))
-    let removeTask = (task) => dispatch(deleteTask(task))
+    let updateTaskDescription = (description: string, task: Task) => dispatch(patchTask({ ...task, description }))
+    let removeTask = (task: Task) => dispatch(deleteTask(task))
     return { updateTaskDescription, removeTask }
 }
 

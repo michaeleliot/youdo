@@ -4,8 +4,9 @@ import { DragDropContext, Droppable } from 'react-beautiful-dnd'
 import React from 'react'
 import { Button } from '@material-ui/core'
 import { useSelector, useDispatch } from 'react-redux'
-import { postColumn, updateTask, updateColumn } from '../redux/actions/trelloactions'
-import { ColumnWithTasks } from '../types'
+import { patchUnhideColumn, patchColumn } from '../redux/actions/columnActions'
+import { patchTask } from '../redux/actions/taskActions'
+import { ColumnWithTasks, Task } from '../types'
 
 function useState() {
     let dispatch = useDispatch()
@@ -13,14 +14,14 @@ function useState() {
     const hiddenColumns = useSelector((state) => state.trello.hiddenColumns)
     const columnObject = useSelector((state) => state.trello.columnObject)
     const taskObject = useSelector((state) => state.trello.taskObject)
-    let addColumn = (column: ColumnWithTasks) => dispatch(postColumn(column))
-    let reorderTask = (body) => dispatch(updateTask(body))
-    let reorderColumn = (body) => dispatch(updateColumn(body))
-    return { columns, hiddenColumns, columnObject, taskObject, addColumn, reorderTask, reorderColumn }
+    let unhideColumn = (column: ColumnWithTasks) => dispatch(patchUnhideColumn(column))
+    let reorderTask = (task: Task) => dispatch(patchTask(task))
+    let reorderColumn = (column: ColumnWithTasks) => dispatch(patchColumn(column))
+    return { columns, hiddenColumns, columnObject, taskObject, unhideColumn, reorderTask, reorderColumn }
 }
 
 export default function Trello() {
-    let { columns, hiddenColumns, columnObject, taskObject, addColumn, reorderTask, reorderColumn } = useState()
+    let { columns, hiddenColumns, columnObject, taskObject, unhideColumn, reorderTask, reorderColumn } = useState()
 
     const onDragEnd = async result => {
         const { destination, source, draggableId, type } = result;
@@ -85,7 +86,7 @@ export default function Trello() {
                 </Droppable>
             </DragDropContext>
             <Button onClick={() => {
-                addColumn({
+                unhideColumn({
                     ...columnObject[hiddenColumns.pop()],
                     position: columns.length,
                     hidden: false,
