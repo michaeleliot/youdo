@@ -1,5 +1,6 @@
 import { Dispatch } from "redux";
 import { ColumnWithTasks, ReduxAction, Task } from "../../types";
+import { apimiddleware } from "../../lib/apimiddleware";
 
 export const ADD_COLUMN = "ADD_COLUMN";
 export const ADD_TASK = "ADD_TASK";
@@ -9,6 +10,9 @@ export const UPDATE_TASK_ORDER = "UPDATE_TASK_ORDER";
 export const UPDATE_COLUMN_ORDER = "UPDATE_COLUMN_ORDER";
 export const ADD_HIDDEN_TASK = "ADD_HIDDEN_TASK";
 export const ADD_HIDDEN_COLUMN = "ADD_HIDDEN_COLUMN";
+
+const taskBaseEndpoint = "http://localhost:3000/api/task"
+const columnBaseEndpoint = "http://localhost:3000/api/column"
 
 
 export const addTask = (task: Task): ReduxAction => ({
@@ -53,77 +57,90 @@ export const changeColumnOrder = (column: ColumnWithTasks): ReduxAction => ({
 
 export const postTask = (task: Task): any => {
     return (dispatch: Dispatch<any>): void => {
-        dispatch(addTask(task))
-        fetch(`http://localhost:3000/api/task/${task.id}`, {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(task),
-        }).then(data => {
-            return data.json()
-        }).then(data => {
-            dispatch(addHiddenTask(data))
-        })
+        apimiddleware(
+            {
+                url: `${taskBaseEndpoint}/${task.id}`,
+                method: "PATCH",
+                data: JSON.stringify(task),
+                onStart: () => addTask(task),
+                onSuccess: addHiddenTask,
+            },
+            dispatch
+        )
     }
 };
 
 export const updateTask = (task: Task): any => {
     return (dispatch: Dispatch<any>): void => {
-        dispatch(changeTaskOrder(task))
-        fetch(`http://localhost:3000/api/task/${task.id}`, {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(task),
-        });
+        apimiddleware(
+            {
+                url: `${taskBaseEndpoint}/${task.id}`,
+                method: "PATCH",
+                data: JSON.stringify(task),
+                onStart: () => changeTaskOrder(task),
+            },
+            dispatch
+        )
     }
 };
 
+
+
 export const updateColumn = (column: ColumnWithTasks): any => {
     return (dispatch: Dispatch<any>): void => {
-        dispatch(changeColumnOrder(column))
-        fetch(`http://localhost:3000/api/column/${column.id}`, {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(column),
-        });
+        apimiddleware(
+            {
+                url: `${columnBaseEndpoint}/${column.id}`,
+                method: "PATCH",
+                data: JSON.stringify(column),
+                onStart: () => changeColumnOrder(column),
+                onSuccess: addHiddenTask,
+            },
+            dispatch
+        )
     }
 };
 
 
 export const postColumn = (column: ColumnWithTasks): any => {
     return (dispatch: Dispatch<any>): void => {
-        dispatch(addColumn(column))
-        fetch(`http://localhost:3000/api/column/${column.id}`, {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(column),
-        }).then(data => {
-            return data.json()
-        }).then(data => {
-            dispatch(addHiddenColumn(data))
-        })
-    }
-};
-
-export const deleteTask = (task: Task) => {
-    return (dispatch: Dispatch<any>): void => {
-        dispatch(removeTask(task))
-        fetch(`http://localhost:3000/api/task/${task.id}`, {
-            method: "DELETE",
-            headers: { "Content-Type": "application/json" },
-        }).catch((err) => {
-            console.log("Delete Task", err)
-        });
+        apimiddleware(
+            {
+                url: `${columnBaseEndpoint}/${column.id}`,
+                method: "PATCH",
+                data: JSON.stringify(column),
+                onStart: () => addColumn(column),
+                onSuccess: addHiddenColumn,
+            },
+            dispatch
+        )
     }
 }
 
-export const deleteColumn = (columnId: number) => {
+export const deleteTask = (task: Task): any => {
     return (dispatch: Dispatch<any>): void => {
-        dispatch(removeColumn(columnId))
-        fetch(`http://localhost:3000/api/column/${columnId}`, {
-            method: "DELETE",
-            headers: { "Content-Type": "application/json" },
-        }).catch((err) => {
-            console.log("Delete Column", err)
-        });
+        apimiddleware(
+            {
+                url: `${taskBaseEndpoint}/${task.id}`,
+                method: "DELETE",
+                data: JSON.stringify(task),
+                onStart: () => removeTask(task),
+            },
+            dispatch
+        )
+    }
+};
+
+export const deleteColumn = (columnId: number): any => {
+    return (dispatch: Dispatch<any>): void => {
+        apimiddleware(
+            {
+                url: `${columnBaseEndpoint}/${columnId}`,
+                method: "Delete",
+                onStart: () => removeColumn(columnId),
+                onSuccess: addHiddenColumn,
+            },
+            dispatch
+        )
     }
 }

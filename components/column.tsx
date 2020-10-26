@@ -26,8 +26,6 @@ function useState() {
 function Column({ column, index }: ColumnProps) {
     let { updateColumnTitle, removeColumn, addTask, taskObject } = useState()
 
-    console.log(column, column.hiddenTasks)
-
     return (
         <Draggable draggableId={"column-" + column.id} index={index}>
             {

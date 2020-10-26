@@ -23,13 +23,10 @@ export const apimiddleware = (payload: any, dispatch: Dispatch<any>): void => {
         headers: allheaders,
         [dataOrParams]: data
     }).then((res) => {
-        if (res.data == undefined || Array.isArray(res.data) && res.data.length == 0) {
-            throw { message: 'No data' };
-        }
-        dispatch(onSuccess(res.data))
+        if (onSuccess) dispatch(onSuccess(res.data))
     }).catch((err) => {
         let response = "Something went wrong"
         console.log(err)
-        dispatch(onFailure(response))
+        if (onFailure) dispatch(onFailure(response))
     });
 };
