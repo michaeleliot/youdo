@@ -1,0 +1,128 @@
+{
+  "version": "0.3.14-fixed",
+  "steps": [
+    {
+      "tag": "UpdateField",
+      "model": "Task",
+      "field": "description",
+      "arity": "Required"
+    },
+    {
+      "tag": "CreateDirective",
+      "location": {
+        "path": {
+          "tag": "Field",
+          "model": "Task",
+          "field": "description"
+        },
+        "directive": "default"
+      }
+    },
+    {
+      "tag": "CreateArgument",
+      "location": {
+        "tag": "Directive",
+        "path": {
+          "tag": "Field",
+          "model": "Task",
+          "field": "description"
+        },
+        "directive": "default"
+      },
+      "argument": "",
+      "value": "\"New Task\""
+    },
+    {
+      "tag": "UpdateField",
+      "model": "Task",
+      "field": "completed",
+      "arity": "Required"
+    },
+    {
+      "tag": "CreateDirective",
+      "location": {
+        "path": {
+          "tag": "Field",
+          "model": "Task",
+          "field": "completed"
+        },
+        "directive": "default"
+      }
+    },
+    {
+      "tag": "CreateArgument",
+      "location": {
+        "tag": "Directive",
+        "path": {
+          "tag": "Field",
+          "model": "Task",
+          "field": "completed"
+        },
+        "directive": "default"
+      },
+      "argument": "",
+      "value": "false"
+    },
+    {
+      "tag": "UpdateField",
+      "model": "Task",
+      "field": "column",
+      "arity": "Required"
+    },
+    {
+      "tag": "UpdateField",
+      "model": "Task",
+      "field": "columnId",
+      "arity": "Required"
+    },
+    {
+      "tag": "UpdateField",
+      "model": "Column",
+      "field": "title",
+      "arity": "Required"
+    },
+    {
+      "tag": "CreateDirective",
+      "location": {
+        "path": {
+          "tag": "Field",
+          "model": "Column",
+          "field": "title"
+        },
+        "directive": "default"
+      }
+    },
+    {
+      "tag": "CreateArgument",
+      "location": {
+        "tag": "Directive",
+        "path": {
+          "tag": "Field",
+          "model": "Column",
+          "field": "title"
+        },
+        "directive": "default"
+      },
+      "argument": "",
+      "value": "\"New Column\""
+    },
+    {
+      "tag": "UpdateField",
+      "model": "Column",
+      "field": "owner",
+      "arity": "Required"
+    },
+    {
+      "tag": "UpdateField",
+      "model": "Column",
+      "field": "userId",
+      "arity": "Required"
+    },
+    {
+      "tag": "UpdateField",
+      "model": "Column",
+      "field": "hidden",
+      "arity": "Required"
+    }
+  ]
+}

@@ -81,12 +81,11 @@ export async function getServerSideProps({ req, res }) {
   if (!columns.length) {
     let tasks = []
     for (let i = 0; i < 10; i++) {
-      tasks.push({ hidden: true })
+      tasks.push({})
     }
     let hiddenColumns = []
     for (let i = 0; i < 10; i++) {
       hiddenColumns.push({
-        title: "New Column",
         Task: {
           create: tasks
         }

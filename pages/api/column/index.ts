@@ -10,7 +10,7 @@ export default async function handle(req, res) {
     const session = await getSession({ req });
     let tasks = []
     for (let i = 0; i < 10; i++) {
-        tasks.push({ hidden: true })
+        tasks.push({})
     }
     const result = await prisma.column.create({
         data: {

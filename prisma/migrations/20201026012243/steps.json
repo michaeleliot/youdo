@@ -1,0 +1,29 @@
+{
+  "version": "0.3.14-fixed",
+  "steps": [
+    {
+      "tag": "UpdateField",
+      "model": "Task",
+      "field": "column",
+      "arity": "Optional"
+    },
+    {
+      "tag": "UpdateField",
+      "model": "Task",
+      "field": "columnId",
+      "arity": "Optional"
+    },
+    {
+      "tag": "UpdateField",
+      "model": "Column",
+      "field": "owner",
+      "arity": "Optional"
+    },
+    {
+      "tag": "UpdateField",
+      "model": "Column",
+      "field": "userId",
+      "arity": "Optional"
+    }
+  ]
+}

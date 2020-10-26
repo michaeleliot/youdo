@@ -52,14 +52,12 @@ export const changeColumnOrder = (column: ColumnWithTasks): ReduxAction => ({
 })
 
 export const postTask = (task: Task): any => {
-    const body = { ...task, hidden: false }
-    console.log("post task", task, body)
     return (dispatch: Dispatch<any>): void => {
-        dispatch(addTask(body))
+        dispatch(addTask(task))
         fetch(`http://localhost:3000/api/task/${task.id}`, {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(body),
+            body: JSON.stringify(task),
         }).then(data => {
             return data.json()
         }).then(data => {

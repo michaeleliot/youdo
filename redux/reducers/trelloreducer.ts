@@ -85,7 +85,7 @@ const trelloReducer = (state = initialState, action): TrelloState => {
                 columnObject: {
                     ...state.columnObject,
                     [column.id]: {
-                        ...state.columnObject[column.id],
+                        ...oldColumn,
                         position: column.position
                     }
                 }
@@ -104,7 +104,6 @@ const trelloReducer = (state = initialState, action): TrelloState => {
         }
         case ADD_HIDDEN_COLUMN: {
             let { column } = action.payload
-            console.log("ADD Hidden Column", column)
             return {
                 ...state,
                 hiddenColumns: [...state.hiddenColumns, column.id],

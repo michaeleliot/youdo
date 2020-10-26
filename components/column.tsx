@@ -69,10 +69,8 @@ function Column({ column, index }: ColumnProps) {
                             }
                         </Droppable>
                         <Button onClick={() => addTask({
-                            id: column.hiddenTasks.pop(),
-                            completed: false,
+                            ...taskObject[column.hiddenTasks.pop()],
                             hidden: false,
-                            description: "New Task",
                             position: column.Task.length,
                             columnId: column.id
                         })}>Add</Button>

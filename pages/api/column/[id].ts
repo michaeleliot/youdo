@@ -57,7 +57,6 @@ export default async function handle(req, res) {
             }
             const replacementCol = await prisma.column.create({
                 data: {
-                    title: "New Column",
                     owner: { connect: { id: Number(column.userId) } },
                     Task: { create: tasks }
                 },
