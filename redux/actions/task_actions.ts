@@ -1,11 +1,7 @@
 import { Dispatch } from "redux";
 import { Task, TaskReduxAction } from "../../types";
 import { apimiddleware } from "../../lib/apimiddleware";
-
-export const ADD_TASK = "ADD_TASK";
-export const DELETE_TASK = "DELETE_TASK";
-export const UPDATE_TASK_ORDER = "UPDATE_TASK_ORDER";
-export const ADD_HIDDEN_TASK = "ADD_HIDDEN_TASK";
+import { ADD_TASK, ADD_HIDDEN_TASK, DELETE_TASK, UPDATE_TASK_ORDER } from "./task_types";
 
 const taskBaseEndpoint = "http://localhost:3000/api/task"
 
@@ -29,9 +25,23 @@ export const changeTaskOrder: TaskReduxAction = (task) => ({
     payload: { task }
 })
 
-export const patchUnhideTask = (task: Task): any => {
-    return (dispatch: Dispatch<any>): void => {
-        apimiddleware(
+export const patchTask = (task: Task): (dispatch: Dispatch<any>) => Promise<void> => {
+    return (dispatch: Dispatch<any>): Promise<void> => {
+        return apimiddleware(
+            {
+                url: `${taskBaseEndpoint}/${task.id}`,
+                method: "PATCH",
+                data: JSON.stringify(task),
+                onStart: () => changeTaskOrder(task),
+            },
+            dispatch
+        )
+    }
+};
+
+export const patchUnhideTask = (task: Task): (dispatch: Dispatch<any>) => Promise<void> => {
+    return (dispatch: Dispatch<any>): Promise<void> => {
+        return apimiddleware(
             {
                 url: `${taskBaseEndpoint}/${task.id}`,
                 method: "PATCH",
@@ -44,24 +54,9 @@ export const patchUnhideTask = (task: Task): any => {
     }
 };
 
-export const patchTask = (task: Task): any => {
-    return (dispatch: Dispatch<any>): void => {
-        apimiddleware(
-            {
-                url: `${taskBaseEndpoint}/${task.id}`,
-                method: "PATCH",
-                data: JSON.stringify(task),
-                onStart: () => changeTaskOrder(task),
-            },
-            dispatch
-        )
-    }
-};
-
-
-export const deleteTask = (task: Task): any => {
-    return (dispatch: Dispatch<any>): void => {
-        apimiddleware(
+export const deleteTask = (task: Task): (dispatch: Dispatch<any>) => Promise<void> => {
+    return (dispatch: Dispatch<any>): Promise<void> => {
+        return apimiddleware(
             {
                 url: `${taskBaseEndpoint}/${task.id}`,
                 method: "DELETE",

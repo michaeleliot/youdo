@@ -1,11 +1,7 @@
 import { Dispatch } from "redux";
 import { ColumnWithTasks, ColumnReduxAction } from "../../types";
 import { apimiddleware } from "../../lib/apimiddleware";
-
-export const ADD_COLUMN = "ADD_COLUMN";
-export const DELETE_COLUMN = "DELETE_COLUMN";
-export const UPDATE_COLUMN_ORDER = "UPDATE_COLUMN_ORDER";
-export const ADD_HIDDEN_COLUMN = "ADD_HIDDEN_COLUMN";
+import { ADD_HIDDEN_COLUMN, ADD_COLUMN, DELETE_COLUMN, UPDATE_COLUMN_ORDER } from "./column_types";
 
 const columnBaseEndpoint = "http://localhost:3000/api/column"
 
@@ -30,9 +26,9 @@ export const changeColumnOrder: ColumnReduxAction = (column) => ({
 })
 
 
-export const patchColumn = (column: ColumnWithTasks): any => {
-    return (dispatch: Dispatch<any>): void => {
-        apimiddleware(
+export const patchColumn = (column: ColumnWithTasks): (dispatch: Dispatch<any>) => Promise<void> => {
+    return (dispatch: Dispatch<any>): Promise<void> => {
+        return apimiddleware(
             {
                 url: `${columnBaseEndpoint}/${column.id}`,
                 method: "PATCH",
@@ -44,9 +40,9 @@ export const patchColumn = (column: ColumnWithTasks): any => {
     }
 };
 
-export const patchUnhideColumn = (column: ColumnWithTasks): any => {
-    return (dispatch: Dispatch<any>): void => {
-        apimiddleware(
+export const patchUnhideColumn = (column: ColumnWithTasks): (dispatch: Dispatch<any>) => Promise<void> => {
+    return (dispatch: Dispatch<any>): Promise<void> => {
+        return apimiddleware(
             {
                 url: `${columnBaseEndpoint}/${column.id}`,
                 method: "PATCH",
@@ -59,9 +55,9 @@ export const patchUnhideColumn = (column: ColumnWithTasks): any => {
     }
 }
 
-export const deleteColumn = (column: ColumnWithTasks): any => {
-    return (dispatch: Dispatch<any>): void => {
-        apimiddleware(
+export const deleteColumn = (column: ColumnWithTasks): (dispatch: Dispatch<any>) => Promise<void> => {
+    return (dispatch: Dispatch<any>): Promise<void> => {
+        return apimiddleware(
             {
                 url: `${columnBaseEndpoint}/${column.id}`,
                 method: "Delete",

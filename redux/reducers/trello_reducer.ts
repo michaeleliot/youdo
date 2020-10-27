@@ -1,9 +1,9 @@
 import { HYDRATE } from 'next-redux-wrapper';
 import { ColumnWithTasks, Task } from '../../types';
-import { UPDATE_TASK_ORDER, ADD_TASK, ADD_HIDDEN_TASK, DELETE_TASK } from '../actions/taskActions';
-import { UPDATE_COLUMN_ORDER, ADD_COLUMN, ADD_HIDDEN_COLUMN, DELETE_COLUMN } from '../actions/columnActions';
+import { UPDATE_TASK_ORDER, ADD_TASK, ADD_HIDDEN_TASK, DELETE_TASK } from '../actions/task_types';
+import { UPDATE_COLUMN_ORDER, ADD_COLUMN, ADD_HIDDEN_COLUMN, DELETE_COLUMN } from '../actions/column_types';
 
-interface TrelloState {
+export interface TrelloState {
     columns: number[],
     hiddenColumns: number[],
     columnObject: {

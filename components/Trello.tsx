@@ -4,8 +4,8 @@ import { DragDropContext, Droppable } from 'react-beautiful-dnd'
 import React from 'react'
 import { Button } from '@material-ui/core'
 import { useSelector, useDispatch } from 'react-redux'
-import { patchUnhideColumn, patchColumn } from '../redux/actions/columnActions'
-import { patchTask } from '../redux/actions/taskActions'
+import { patchUnhideColumn, patchColumn } from '../redux/actions/column_actions'
+import { patchTask } from '../redux/actions/task_actions'
 import { ColumnWithTasks, Task } from '../types'
 
 function useState() {
@@ -52,8 +52,6 @@ export default function Trello() {
 
     const onDragUpdate = update => {
     }
-
-
 
     return (
         <div className={styles.container}>

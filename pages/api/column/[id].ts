@@ -1,7 +1,5 @@
 import prisma from "../../../lib/prisma"
 
-
-// DELETE /api/task/:id
 export default async function handle(req, res) {
     const columnId = req.query.id;
     if (req.method === "DELETE") {
@@ -51,14 +49,10 @@ export default async function handle(req, res) {
             where: { id: Number(columnId) },
         });
         if (hidden != column.hidden) {
-            let tasks = []
-            for (let i = 0; i < 10; i++) {
-                tasks.push({ hidden: true })
-            }
             const replacementCol = await prisma.column.create({
                 data: {
                     owner: { connect: { id: Number(column.userId) } },
-                    Task: { create: tasks }
+                    Task: { create: Array(10).fill({}) }
                 },
                 include: {
                     Task: { orderBy: { position: "asc" } },

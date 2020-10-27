@@ -79,32 +79,22 @@ export async function getServerSideProps({ req, res }) {
   })
 
   if (!columns.length) {
-    let tasks = []
-    for (let i = 0; i < 10; i++) {
-      tasks.push({})
-    }
-    let hiddenColumns = []
-    for (let i = 0; i < 10; i++) {
-      hiddenColumns.push({
-        Task: {
-          create: tasks
-        }
-      })
-    }
     let defaultUser = await prisma.user.update({
       where: { email: session.user.email },
       data: {
         Column: {
-          create: hiddenColumns,
+          create: Array(10).fill({ Task: { create: Array(10).fill({}) } })
         },
       },
       include: {
-        Column: { orderBy: { position: "asc" }, include: { Task: {} } },
+        Column: {
+          orderBy: { position: "asc" },
+          include: { Task: {} }
+        },
       },
     })
     columns = defaultUser.Column
   }
-
 
   const columnObject: { [key: number]: ColumnWithTasks } = {}
   const taskObject: { [key: number]: Task } = {}

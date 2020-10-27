@@ -5,8 +5,8 @@ import React from 'react'
 import { Button } from '@material-ui/core'
 import EditableLabel from 'react-inline-editing';
 import { useSelector } from 'react-redux'
-import { deleteColumn, patchColumn } from '../redux/actions/columnActions'
-import { patchUnhideTask } from '../redux/actions/taskActions'
+import { deleteColumn, patchColumn } from '../redux/actions/column_actions'
+import { patchUnhideTask } from '../redux/actions/task_actions'
 
 import { useDispatch } from 'react-redux'
 import { ColumnWithTasks, Task as TaskType } from '../types'

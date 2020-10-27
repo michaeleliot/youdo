@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { Dispatch } from 'react';
 
-export const apimiddleware = (payload: any, dispatch: Dispatch<any>): void => {
+export const apimiddleware = (payload: any, dispatch: Dispatch<any>): Promise<void> => {
     const {
         url,
         method,
@@ -16,8 +16,8 @@ export const apimiddleware = (payload: any, dispatch: Dispatch<any>): void => {
         ...headers
     };
     const dataOrParams = ["GET", "DELETE"].includes(method) ? "params" : "data";
-    dispatch(onStart())
-    axios.request({
+    if (onStart) dispatch(onStart())
+    return axios.request({
         url,
         method,
         headers: allheaders,
