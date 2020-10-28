@@ -1,11 +1,12 @@
 import { HYDRATE } from 'next-redux-wrapper';
 import { ColumnWithTasks, Task } from '../../types';
 import { UPDATE_TASK_ORDER, ADD_TASK, ADD_HIDDEN_TASK, DELETE_TASK } from '../actions/task_types';
-import { UPDATE_COLUMN_ORDER, ADD_COLUMN, ADD_HIDDEN_COLUMN, DELETE_COLUMN } from '../actions/column_types';
+import { UPDATE_COLUMN_ORDER, ADD_COLUMN, UPDATE_FAKE_COLUMN, DELETE_COLUMN } from '../actions/column_types';
 
 export interface TrelloState {
     columns: number[],
-    hiddenColumns: number[],
+    fakeColumnId: number,
+    fakeTaskId: number,
     columnObject: {
         [key: number]: ColumnWithTasks;
     }
@@ -14,7 +15,13 @@ export interface TrelloState {
     }
 }
 
-const initialState: TrelloState = { columns: [], hiddenColumns: [], columnObject: {}, taskObject: {} }
+const initialState: TrelloState = {
+    columns: [],
+    fakeColumnId: -1,
+    fakeTaskId: -1,
+    columnObject: {},
+    taskObject: {}
+}
 
 const trelloReducer = (state = initialState, action): TrelloState => {
     switch (action.type) {
@@ -93,7 +100,7 @@ const trelloReducer = (state = initialState, action): TrelloState => {
             };
         }
         case ADD_COLUMN: {
-            let { column } = action.payload
+            let column: ColumnWithTasks = { id: state.fakeColumnId--, title: "New Column", userId: null, position: state.columns.length, Task: [] }
             return {
                 ...state,
                 columns: [...state.columns, column.id],
@@ -103,27 +110,35 @@ const trelloReducer = (state = initialState, action): TrelloState => {
                 }
             };
         }
-        case ADD_HIDDEN_COLUMN: {
+        case UPDATE_FAKE_COLUMN: {
+            /* 
+            Three things need to happen
+            * DONE The id index needs to be switched to the correct one 
+            * DONE The column object needs to have new id => new column
+            * DONE The fake column has to be deleted
+            * TODO The pending actions of the fake column need to be done
+            */
             let { column } = action.payload
+            let fakeColumnToUpdateIndex = state.columns.findIndex(id => id < 0)
+            let fakeColumnToUpdateId = state.columns[fakeColumnToUpdateIndex]
+            state.columns[fakeColumnToUpdateIndex] = column.id
+            delete state.columnObject[fakeColumnToUpdateId]
             return {
                 ...state,
-                hiddenColumns: [...state.hiddenColumns, column.id],
                 columnObject: {
                     ...state.columnObject,
-                    [column.id]: {
-                        ...column,
-                        Task: [],
-                        hiddenTasks: column.Task
-                    }
+                    [column.id]: column
                 }
             };
         }
         case DELETE_COLUMN: {
             let { column } = action.payload
             delete state.columnObject[column.id]
+            let columns = state.columns.filter(colId => colId != column.id)
+            columns.forEach((columnId, index) => state.columnObject[columnId].position = index)
             return {
                 ...state,
-                columns: state.columns.filter(colId => colId != column.id)
+                columns
             }
         }
         case ADD_TASK: {
@@ -164,13 +179,15 @@ const trelloReducer = (state = initialState, action): TrelloState => {
         case DELETE_TASK: {
             let { task } = action.payload
             delete state.taskObject[task.id]
+            let Task = state.columnObject[task.columnId].Task.filter(tId => tId != task.id)
+            Task.forEach((taskId, index) => state.taskObject[taskId].position = index)
             return {
                 ...state,
                 columnObject: {
                     ...state.columnObject,
                     [task.columnId]: {
                         ...state.columnObject[task.columnId],
-                        Task: state.columnObject[task.columnId].Task.filter(tId => tId != task.id)
+                        Task
                     }
                 }
             }

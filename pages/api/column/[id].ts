@@ -6,6 +6,14 @@ export default async function handle(req, res) {
         const column = await prisma.column.delete({
             where: { id: Number(columnId) },
         });
+        await prisma.column.updateMany({
+            data: { position: { decrement: 1 } },
+            where: {
+                position: {
+                    gt: column.position,
+                }
+            },
+        });
         res.json(column);
     } else if (req.method === "PATCH") {
         const { title, position: newPosition, hidden } = req.body
@@ -16,26 +24,24 @@ export default async function handle(req, res) {
 
         if (newPosition != null && oldPosition != null) {
             if (oldPosition < newPosition) {
-                let where = {
-                    position: {
-                        gt: oldPosition,
-                        lte: newPosition
-                    }
-                }
                 await prisma.column.updateMany({
                     data: { position: { decrement: 1 } },
-                    where,
+                    where: {
+                        position: {
+                            gt: oldPosition,
+                            lte: newPosition
+                        }
+                    },
                 });
             } else if (oldPosition > newPosition) {
-                let where = {
-                    position: {
-                        lt: oldPosition,
-                        gte: newPosition
-                    }
-                }
                 await prisma.column.updateMany({
                     data: { position: { increment: 1 } },
-                    where,
+                    where: {
+                        position: {
+                            lt: oldPosition,
+                            gte: newPosition
+                        }
+                    },
                 });
             }
         }

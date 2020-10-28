@@ -8,6 +8,17 @@ export default async function handle(req, res) {
         const task = await prisma.task.delete({
             where: { id: Number(taskId) },
         });
+        await prisma.task.updateMany({
+            data: { position: { decrement: 1 } },
+            where: {
+                columnId: {
+                    equals: task.columnId,
+                },
+                position: {
+                    gt: task.position,
+                }
+            },
+        });
         res.json(task);
     } else if (req.method === "PATCH") {
         const { description, completed, position: newPosition, columnId: newColumnId, hidden } = req.body

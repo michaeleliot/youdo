@@ -4,7 +4,7 @@ import { DragDropContext, Droppable } from 'react-beautiful-dnd'
 import React from 'react'
 import { Button } from '@material-ui/core'
 import { useSelector, useDispatch } from 'react-redux'
-import { patchUnhideColumn, patchColumn } from '../redux/actions/column_actions'
+import { postColumn, patchColumn } from '../redux/actions/column_actions'
 import { patchTask } from '../redux/actions/task_actions'
 import { ColumnWithTasks, Task } from '../types'
 
@@ -14,14 +14,14 @@ function useState() {
     const hiddenColumns = useSelector((state) => state.trello.hiddenColumns)
     const columnObject = useSelector((state) => state.trello.columnObject)
     const taskObject = useSelector((state) => state.trello.taskObject)
-    let unhideColumn = (column: ColumnWithTasks) => dispatch(patchUnhideColumn(column))
+    let addColumn = () => dispatch(postColumn())
     let reorderTask = (task: Task) => dispatch(patchTask(task))
     let reorderColumn = (column: ColumnWithTasks) => dispatch(patchColumn(column))
-    return { columns, hiddenColumns, columnObject, taskObject, unhideColumn, reorderTask, reorderColumn }
+    return { columns, hiddenColumns, columnObject, taskObject, addColumn, reorderTask, reorderColumn }
 }
 
 export default function Trello() {
-    let { columns, hiddenColumns, columnObject, taskObject, unhideColumn, reorderTask, reorderColumn } = useState()
+    let { columns, hiddenColumns, columnObject, taskObject, addColumn, reorderTask, reorderColumn } = useState()
 
     const onDragEnd = async result => {
         const { destination, source, draggableId, type } = result;
@@ -37,7 +37,9 @@ export default function Trello() {
         if (type == "column") {
             let columnId = Number(draggableId.split("-")[1])
             let updatedColumn = { ...columnObject[columnId], position: destination.index }
-            reorderColumn(updatedColumn)
+            if (!updatedColumn.isFake) {
+                reorderColumn(updatedColumn)
+            }
             return
         }
 
@@ -83,13 +85,7 @@ export default function Trello() {
                     }
                 </Droppable>
             </DragDropContext>
-            <Button onClick={() => {
-                unhideColumn({
-                    ...columnObject[hiddenColumns.pop()],
-                    position: columns.length,
-                    hidden: false,
-                })
-            }}> New </Button>
+            <Button onClick={() => addColumn()}> New </Button>
         </div >
     )
 }

@@ -6,7 +6,7 @@ import { Button } from '@material-ui/core'
 import EditableLabel from 'react-inline-editing';
 import { useSelector } from 'react-redux'
 import { deleteColumn, patchColumn } from '../redux/actions/column_actions'
-import { patchUnhideTask } from '../redux/actions/task_actions'
+import { patchUnhideTask } from '../redux/actions/taskActions'
 
 import { useDispatch } from 'react-redux'
 import { ColumnWithTasks, Task as TaskType } from '../types'
@@ -47,7 +47,7 @@ function Column({ column, index }: ColumnProps) {
                             />
                         </div>
 
-                        <Button color='secondary' onClick={() => removeColumn(column)}>Delete Column</Button>
+                        <Button color='secondary' onClick={() => !column.isFake ? removeColumn(column) : console.log("column is fake")}>Delete Column</Button>
                         <Droppable droppableId={"column-" + column.id} type='task'>
                             {
                                 (provided, snapshot) => (

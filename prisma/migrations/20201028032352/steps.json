@@ -1,0 +1,15 @@
+{
+  "version": "0.3.14-fixed",
+  "steps": [
+    {
+      "tag": "DeleteField",
+      "model": "Task",
+      "field": "hidden"
+    },
+    {
+      "tag": "DeleteField",
+      "model": "Column",
+      "field": "hidden"
+    }
+  ]
+}
