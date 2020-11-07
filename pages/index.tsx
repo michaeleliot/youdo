@@ -10,6 +10,7 @@ import { initializeStore } from '../redux/store'
 import { getSession, signIn, signOut, useSession } from "next-auth/client";
 
 import { ColumnWithTasks, Task } from '../types'
+import { TrelloState } from '../redux/reducers/trello_reducer'
 
 
 const IndexPage = () => {
@@ -78,44 +79,27 @@ export async function getServerSideProps({ req, res }) {
     },
   })
 
-  if (!columns.length) {
-    let defaultUser = await prisma.user.update({
-      where: { email: session.user.email },
-      data: {
-        Column: {
-          create: Array(10).fill({ Task: { create: Array(10).fill({}) } })
-        },
-      },
-      include: {
-        Column: {
-          orderBy: { position: "asc" },
-          include: { Task: {} }
-        },
-      },
-    })
-    columns = defaultUser.Column
-  }
-
   const columnObject: { [key: number]: ColumnWithTasks } = {}
   const taskObject: { [key: number]: Task } = {}
   columns.forEach(column => {
     columnObject[column.id] = {
       ...column,
-      Task: column.Task.filter(task => !task.hidden).map(task => task.id),
-      hiddenTasks: column.Task.filter(task => task.hidden).map(task => task.id)
+      Task: column.Task.map(task => task.id),
     }
     column.Task.forEach(task =>
       taskObject[task.id] = task
     )
   })
-
+  let trello: TrelloState = {
+    fakeColumnId: -1,
+    fakeTaskId: -1,
+    pendingActions: [],
+    columns: columns.map(column => column.id),
+    columnObject,
+    taskObject
+  }
   const reduxStore = initializeStore({
-    trello: {
-      columns: columns.filter(column => !column.hidden).map(column => column.id),
-      hiddenColumns: columns.filter(column => column.hidden).map(column => column.id),
-      columnObject,
-      taskObject
-    }
+    trello
   })
 
   return { props: { initialReduxState: reduxStore.getState() } }

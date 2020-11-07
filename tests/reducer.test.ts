@@ -2,34 +2,33 @@ import * as task_types from '../redux/actions/task_types'
 import * as column_types from '../redux/actions/column_types'
 
 import reducer, { TrelloState } from '../redux/reducers/trello_reducer'
+import { ColumnWithTasks, Task } from '../types';
 
 let initialState: TrelloState = {
     columns: [],
-    hiddenColumns: [],
+    fakeColumnId: -1,
+    fakeTaskId: -1,
     columnObject: {},
-    taskObject: {}
+    taskObject: {},
+    pendingActions: []
 }
 let testState: TrelloState;
 
 function resetTestState(): TrelloState {
     return {
+        pendingActions: [],
+        fakeColumnId: -1,
+        fakeTaskId: -1,
         columns: [1, 2, 3],
-        hiddenColumns: [4, 5, 6],
         columnObject: {
-            1: { id: 1, title: "Test Column 1", userId: 1, position: 0, hidden: false, Task: [1, 2, 3], hiddenTasks: [4, 5, 6] },
-            2: { id: 2, title: "Test Column 2", userId: 1, position: 1, hidden: false, Task: [], hiddenTasks: [] },
-            3: { id: 3, title: "Test Column 3", userId: 1, position: 2, hidden: false, Task: [], hiddenTasks: [] },
-            4: { id: 4, title: "Test Column 4", userId: 1, position: null, hidden: true, Task: [], hiddenTasks: [] },
-            5: { id: 5, title: "Test Column 5", userId: 1, position: null, hidden: true, Task: [], hiddenTasks: [] },
-            6: { id: 6, title: "Test Column 6", userId: 1, position: null, hidden: true, Task: [], hiddenTasks: [] }
+            1: { id: 1, title: "Test Column 1", userId: 1, position: 0, Task: [1, 2, 3] },
+            2: { id: 2, title: "Test Column 2", userId: 1, position: 1, Task: [] },
+            3: { id: 3, title: "Test Column 3", userId: 1, position: 2, Task: [] },
         },
         taskObject: {
-            1: { id: 1, description: "Test Task 1", columnId: 1, position: 0, hidden: false, completed: false },
-            2: { id: 2, description: "Test Task 2", columnId: 1, position: 1, hidden: false, completed: false },
-            3: { id: 3, description: "Test Task 3", columnId: 1, position: 2, hidden: false, completed: false },
-            4: { id: 4, description: "Test Task 4", columnId: 1, position: 0, hidden: true, completed: false },
-            5: { id: 5, description: "Test Task 5", columnId: 1, position: 0, hidden: true, completed: false },
-            6: { id: 6, description: "Test Task 6", columnId: 1, position: 0, hidden: true, completed: false },
+            1: { id: 1, description: "Test Task 1", columnId: 1, position: 0, completed: false },
+            2: { id: 2, description: "Test Task 2", columnId: 1, position: 1, completed: false },
+            3: { id: 3, description: "Test Task 3", columnId: 1, position: 2, completed: false },
         }
     }
 }
@@ -42,37 +41,46 @@ describe('trello reducer - column actions', () => {
         expect(reducer(undefined, {})).toEqual(initialState)
     })
     it('should handle ADD_COLUMN', () => {
-        let fourthColumn = { ...testState.columnObject[4], position: 3, hidden: false }
         expect(reducer(testState, {
             type: column_types.ADD_COLUMN,
-            payload: { column: fourthColumn }
+            payload: {}
         })).toEqual({
             ...testState,
-            columns: [1, 2, 3, 4],
-            hiddenColumns: [5, 6],
+            columns: [1, 2, 3, -1],
             columnObject: {
                 ...testState.columnObject,
-                4: { ...testState.columnObject[4], position: 3, hidden: false },
+                "-1": {
+                    id: -1,
+                    title: "New Column",
+                    userId: null,
+                    position: 3,
+                    Task: [],
+                    isFake: true
+                }
             },
+            fakeColumnId: -2,
         })
     })
-    it('should handle ADD_HIDDEN_COLUMN', () => {
-        let seventhColumn = { id: 7, title: "Test Column 7", userId: 1, position: null, hidden: true, Task: [], hiddenTasks: [] }
+    it('should handle UPDATE_FAKE_COLUMN', () => {
+        let newColumn: ColumnWithTasks = { id: 7, title: "New Column", userId: 1, position: 3, Task: [] }
+        testState = reducer(testState, {
+            type: column_types.ADD_COLUMN,
+            payload: {}
+        })
         expect(reducer(testState, {
-            type: column_types.ADD_HIDDEN_COLUMN,
-            payload: { column: seventhColumn }
+            type: column_types.UPDATE_FAKE_COLUMN,
+            payload: { column: newColumn }
         })).toEqual({
             ...testState,
-            columns: [1, 2, 3],
-            hiddenColumns: [4, 5, 6, 7],
+            columns: [1, 2, 3, 7],
             columnObject: {
                 ...testState.columnObject,
-                7: seventhColumn,
+                7: newColumn,
             },
         })
     })
     it('should handle DELETE_COLUMN', () => {
-        let thirdColumn = { ...testState.columnObject[2] }
+        let thirdColumn: ColumnWithTasks = { ...testState.columnObject[2] }
         expect(reducer(testState, {
             type: column_types.DELETE_COLUMN,
             payload: { column: thirdColumn }
@@ -85,8 +93,98 @@ describe('trello reducer - column actions', () => {
             }
         })
     })
+
+    it('should handle DELETE_COLUMN on a fake column, and that pending delete should be updated on UPDATE_FAKE_COLUMN', () => {
+        let newFakeColumn = {
+            id: -1,
+            title: "Just leaving this here",
+            userId: null,
+            position: 3,
+            Task: [],
+            isFake: true
+        }
+        testState = reducer(testState, {
+            type: column_types.ADD_COLUMN,
+            payload: {}
+        })
+
+        let testStateAfterDelete = reducer(testState, {
+            type: column_types.DELETE_COLUMN,
+            payload: { column: newFakeColumn }
+        })
+        expect(testStateAfterDelete).toEqual({
+            ...testState,
+            columns: [1, 2, 3],
+            columnObject: {
+                ...testState.columnObject
+            },
+            pendingActions: [{ column: newFakeColumn, action: "delete" }]
+        })
+
+        let newColumn: ColumnWithTasks = { id: 7, title: "Test Column 7", userId: 1, position: 3, Task: [] }
+        expect(reducer(testStateAfterDelete, {
+            type: column_types.UPDATE_FAKE_COLUMN,
+            payload: { column: newColumn }
+        })).toEqual({
+            ...testStateAfterDelete,
+            pendingActions: [{ column: newColumn, action: "delete" }]
+        })
+    })
+
+    it('should handle UPDATE_COLUMN_ORDER on a fake column, and that pending update should be updated on UPDATE_FAKE_COLUMN', () => {
+        let newFakeColumn = {
+            id: -1,
+            title: "N2222",
+            userId: null,
+            position: 1,
+            Task: [],
+            isFake: true
+        }
+        testState = reducer(testState, {
+            type: column_types.ADD_COLUMN,
+            payload: {}
+        })
+
+        let testStateAfterUpdate = reducer(testState, {
+            type: column_types.UPDATE_COLUMN_ORDER,
+            payload: { column: newFakeColumn }
+        })
+        expect(testStateAfterUpdate).toEqual({
+            ...testState,
+            columns: [1, -1, 2, 3],
+            columnObject: {
+                ...testState.columnObject,
+                2: { ...testState.columnObject[2], position: 2 },
+                3: { ...testState.columnObject[3], position: 3 }
+            },
+            pendingActions: [{ column: newFakeColumn, action: "update" }]
+        })
+
+        let newColumn: ColumnWithTasks = { id: 7, title: "New Column", userId: 1, position: 3, Task: [] }
+        let testStateAfterServer = reducer(testStateAfterUpdate, {
+            type: column_types.UPDATE_FAKE_COLUMN,
+            payload: { column: newColumn }
+        })
+        expect(testStateAfterServer).toEqual({
+            ...testStateAfterUpdate,
+            columnObject: {
+                ...testStateAfterUpdate.columnObject,
+                7: {
+                    ...newColumn,
+                    position: 1
+                }
+            },
+            pendingActions: [{
+                column: {
+                    ...newColumn,
+                    position: 1,
+                }, action: "update"
+            }]
+        })
+    })
+
     it('should handle UPDATE_COLUMN_ORDER', () => {
-        let updatedThirdColumn = { ...testState.columnObject[3], position: 0 }
+        let updatedThirdColumn: ColumnWithTasks = { ...testState.columnObject[3], position: 0 }
         expect(reducer(testState, {
             type: column_types.UPDATE_COLUMN_ORDER,
             payload: { column: updatedThirdColumn }
@@ -108,24 +206,31 @@ describe('trello reducer - task actions', () => {
         testState = resetTestState()
     })
     it('should handle ADD_TASK', () => {
-        let newTask = { ...testState.taskObject[4], position: 3, hidden: false }
         expect(reducer(testState, {
             type: task_types.ADD_TASK,
-            payload: { task: newTask }
+            payload: { columnId: 1 }
         })).toEqual({
             ...testState,
             columnObject: {
                 ...testState.columnObject,
-                1: { ...testState.columnObject[1], Task: [1, 2, 3, 4], hiddenTasks: [5, 6] },
+                1: { ...testState.columnObject[1], Task: [1, 2, 3, -1] },
             },
             taskObject: {
                 ...testState.taskObject,
-                4: newTask
-            }
+                "-1": {
+                    id: -1,
+                    position: 3,
+                    description: "New Task",
+                    completed: false,
+                    columnId: 1,
+                    isFake: true
+                }
+            },
+            fakeTaskId: -2
         })
     })
     it('should handle DELETE_TASK', () => {
-        let secondTask = { ...testState.taskObject[2] }
+        let secondTask: Task = { ...testState.taskObject[2] }
         expect(reducer(testState, {
             type: task_types.DELETE_TASK,
             payload: { task: secondTask }
@@ -133,7 +238,7 @@ describe('trello reducer - task actions', () => {
             ...testState,
             columnObject: {
                 ...testState.columnObject,
-                1: { ...testState.columnObject[1], Task: [1, 3], hiddenTasks: [4, 5, 6] },
+                1: { ...testState.columnObject[1], Task: [1, 3] },
             },
             taskObject: {
                 ...testState.taskObject,
@@ -142,7 +247,7 @@ describe('trello reducer - task actions', () => {
         })
     })
     it('should handle UPDATE_TASK_ORDER when moving within a column', () => {
-        let updatedThirdTask = { ...testState.taskObject[3], position: 0 }
+        let updatedThirdTask: Task = { ...testState.taskObject[3], position: 0 }
         expect(reducer(testState, {
             type: task_types.UPDATE_TASK_ORDER,
             payload: { task: updatedThirdTask }
@@ -161,7 +266,7 @@ describe('trello reducer - task actions', () => {
         })
     })
     it('should handle UPDATE_TASK_ORDER when moving between columns', () => {
-        let updatedThirdTask = { ...testState.taskObject[3], position: 0, columnId: 2 }
+        let updatedThirdTask: Task = { ...testState.taskObject[3], position: 0, columnId: 2 }
         expect(reducer(testState, {
             type: task_types.UPDATE_TASK_ORDER,
             payload: { task: updatedThirdTask }
@@ -178,16 +283,20 @@ describe('trello reducer - task actions', () => {
             },
         })
     })
-    it('should handle ADD_HIDDEN_TASK', () => {
-        let seventhTask = { id: 7, title: "Test Task 7", userId: 1, position: null, hidden: true, completed: false, columnId: 1 }
+    it('should handle UPDATE_FAKE_TASK', () => {
+        let seventhTask: Task = { id: 7, description: "Test Task 7", position: 3, completed: false, columnId: 1 }
+        testState = reducer(testState, {
+            type: task_types.ADD_TASK,
+            payload: { columnId: 1 }
+        })
         expect(reducer(testState, {
-            type: task_types.ADD_HIDDEN_TASK,
+            type: task_types.UPDATE_FAKE_TASK,
             payload: { task: seventhTask }
         })).toEqual({
             ...testState,
             columnObject: {
                 ...testState.columnObject,
-                1: { ...testState.columnObject[1], hiddenTasks: [4, 5, 6, 7] },
+                1: { ...testState.columnObject[1], Task: [1, 2, 3, 7] },
             },
             taskObject: {
                 ...testState.taskObject,

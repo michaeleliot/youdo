@@ -1,67 +1,101 @@
 import { Dispatch } from "redux";
-import { ColumnWithTasks, ColumnReduxAction } from "../../types";
+import { ColumnWithTasks, ColumnReduxAction, ReduxAction } from "../../types";
 import { apimiddleware } from "../../lib/apimiddleware";
-import { UPDATE_FAKE_COLUMN, ADD_COLUMN, DELETE_COLUMN, UPDATE_COLUMN_ORDER } from "./column_types";
+import { UPDATE_FAKE_COLUMN, ADD_COLUMN, DELETE_COLUMN, UPDATE_COLUMN_ORDER, CLEAR_PENDING_ACTIONS } from "./column_types";
+import { ThunkAction, ThunkDispatch } from "redux-thunk";
 
 const columnBaseEndpoint = "http://localhost:3000/api/column"
 
-export const updateFakeColumn: ColumnReduxAction = (column) => ({
+export const updateFakeColumnAction: ColumnReduxAction = (column) => ({
     type: UPDATE_FAKE_COLUMN,
     payload: { column }
 })
 
-export const addColumn: ColumnReduxAction = () => ({
+export const addColumnAction = () => ({
     type: ADD_COLUMN,
     payload: {}
 })
 
-export const removeColumn: ColumnReduxAction = (column) => ({
+export const clearPendingActions = () => ({
+    type: CLEAR_PENDING_ACTIONS,
+    payload: {}
+})
+
+export const removeColumnAction: ColumnReduxAction = (column) => ({
     type: DELETE_COLUMN,
     payload: { column }
 })
 
-export const changeColumnOrder: ColumnReduxAction = (column) => ({
+export const changeColumnOrderAction: ColumnReduxAction = (column) => ({
     type: UPDATE_COLUMN_ORDER,
     payload: { column }
 })
 
+export const completePendingRequests = (arr: any[]): any => {
+    return (dispatch: Dispatch<any>): any => {
+        for (let action of arr) {
+            if (action.action == "delete") {
+                dispatch(deleteColumnRequest(action.column))
+            } else if (action.action == "update") {
+                dispatch(patchColumnRequest(action.column))
+            }
+        }
+        dispatch(clearPendingActions())
+    }
+}
 
-export const patchColumn = (column: ColumnWithTasks): (dispatch: Dispatch<any>) => Promise<void> => {
+export const updateColumnPosition = (column: ColumnWithTasks) => {
+    if (column.isFake) {
+        return changeColumnOrderAction(column)
+    }
+    return patchColumnRequest(column, () => changeColumnOrderAction(column))
+}
 
+export const patchColumnRequest = (column: ColumnWithTasks, onStart = null, onSuccess = null, onError = null): (dispatch: Dispatch<any>) => Promise<void> => {
     return (dispatch: Dispatch<any>): Promise<void> => {
         return apimiddleware(
             {
                 url: columnBaseEndpoint + "/" + column.id,
                 method: "PATCH",
                 data: JSON.stringify(column),
-                onStart: () => changeColumnOrder(column),
+                onStart,
             },
             dispatch
         )
     }
 };
 
-export const postColumn = (): (dispatch: Dispatch<any>) => Promise<void> => {
+export const postColumnRequest = (position: number): (dispatch: Dispatch<any>) => Promise<void> => {
     return (dispatch: Dispatch<any>): Promise<void> => {
         return apimiddleware(
             {
                 url: columnBaseEndpoint,
                 method: "POST",
-                onStart: addColumn,
-                onSuccess: updateFakeColumn,
+                data: { title: "New Column", position },
+                onStart: addColumnAction,
+                onSuccess: updateFakeColumnAction,
             },
             dispatch
         )
     }
 }
 
-export const deleteColumn = (column: ColumnWithTasks): (dispatch: Dispatch<any>) => Promise<void> => {
-    return (dispatch: Dispatch<any>): Promise<void> => {
+export const deleteColumn = (column: ColumnWithTasks) => {
+    if (column.isFake) {
+        return removeColumnAction(column)
+    }
+    return deleteColumnRequest(column, () => removeColumnAction(column))
+}
+
+export const deleteColumnRequest = (column: ColumnWithTasks, onStart = null, onSuccess = null, onError = null): ThunkAction<Promise<void>, {}, {}, any> => {
+    return (dispatch: ThunkDispatch<{}, {}, any>): Promise<void> => {
         return apimiddleware(
             {
                 url: columnBaseEndpoint + "/" + column.id,
                 method: "Delete",
-                onStart: () => removeColumn(column),
+                onStart,
+                onSuccess,
+                onError
             },
             dispatch
         )

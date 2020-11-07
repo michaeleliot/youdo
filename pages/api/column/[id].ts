@@ -16,7 +16,7 @@ export default async function handle(req, res) {
         });
         res.json(column);
     } else if (req.method === "PATCH") {
-        const { title, position: newPosition, hidden } = req.body
+        const { title, position: newPosition } = req.body
         const column = await prisma.column.findOne({
             where: { id: Number(columnId) },
         });
@@ -49,25 +49,11 @@ export default async function handle(req, res) {
         const newCol = await prisma.column.update({
             data: {
                 title,
-                position: newPosition,
-                hidden
+                position: newPosition
             },
             where: { id: Number(columnId) },
         });
-        if (hidden != column.hidden) {
-            const replacementCol = await prisma.column.create({
-                data: {
-                    owner: { connect: { id: Number(column.userId) } },
-                    Task: { create: Array(10).fill({}) }
-                },
-                include: {
-                    Task: { orderBy: { position: "asc" } },
-                },
-            });
-            res.json(replacementCol);
-        } else {
-            res.json(newCol);
-        }
+        res.json(newCol);
     } else {
         throw new Error(
             `The HTTP ${req.method} method is not supported at this route.`

@@ -5,7 +5,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url = "***"
+  url      = "***"
 }
 
 model Account {
@@ -70,7 +70,6 @@ model Task {
   column      Column?  @relation(fields: [columnId], references: [id])
   columnId    Int?
   position    Int?
-  hidden      Boolean  @default(true)
 }
 
 model Column {

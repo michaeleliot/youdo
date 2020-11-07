@@ -22,7 +22,7 @@ function useState() {
 export default function TaskView({ task, index }: TaskProps) {
     let { updateTaskDescription, removeTask } = useState()
     return (
-        <Draggable draggableId={"task-" + task.id} index={index}>
+        <Draggable draggableId={"task:" + task.id} index={index}>
             {
                 (provided, snapshot) => (
                     <div
@@ -41,14 +41,18 @@ export default function TaskView({ task, index }: TaskProps) {
                             inputMin
                             onFocus={(text) => (console.log("OnFocus"))}
                             onFocusOut={(text) => {
-                                task.description != text ? updateTaskDescription(text, task) : console.log("Did not update")
+                                task.description != text && !task.isFake ? updateTaskDescription(text, task) : console.log("Did not update")
                             }}
                         />
-                        <Button color='secondary' onClick={() => (removeTask(task))}> Delete </Button>
-                        <Button color='primary' onClick={() => (removeTask(task))}> Complete </Button>
+                        {
+                            task.isFake &&
+                            <div> Please Wait While Task Loads </div>
+                        }
+                        <Button color='secondary' onClick={() => !task.isFake ? removeTask(task) : console.log("did not delete because task is fake")}> Delete </Button>
+                        <Button color='primary' onClick={() => !task.isFake ? removeTask(task) : console.log("did not complete because task is fake")}> Complete </Button>
                     </div>
                 )
             }
-        </Draggable>
+        </Draggable >
     )
 }

@@ -4,6 +4,8 @@ import * as types from '../redux/actions/column_types'
 import configureMockStore from 'redux-mock-store'
 import thunk from 'redux-thunk'
 import axios from 'axios'
+import { Column, ColumnWhereInput } from '@prisma/client'
+import { ColumnWithTasks } from '../types'
 
 jest.mock('axios');
 
@@ -11,40 +13,47 @@ const middlewares = [thunk]
 const mockStore = configureMockStore(middlewares)
 
 describe('actions', () => {
-    const column = { id: 1, title: "Test Column", userId: 1, position: 0, hidden: false, Task: [], hiddenTasks: [] }
+    const column: ColumnWithTasks = { id: 1, title: "Test Column", userId: 1, position: 0, Task: [] }
 
-    it('should create an action to add a column', () => {
+    it('ADD_COLUMN should create an action to add a column', () => {
         const expectedAction = {
             type: types.ADD_COLUMN,
-            payload: { column }
+            payload: {}
         }
-        expect(actions.addColumn(column)).toEqual(expectedAction)
+        expect(actions.addColumnAction()).toEqual(expectedAction)
     })
-    it('should create an action to delete a column', () => {
+    it('DELETE_COLUMN should create an action to delete a column', () => {
         const expectedAction = {
             type: types.DELETE_COLUMN,
             payload: { column }
         }
-        expect(actions.removeColumn(column)).toEqual(expectedAction)
+        expect(actions.removeColumnAction(column)).toEqual(expectedAction)
     })
-    it('should create an action to reorder the column', () => {
+    it('UPDATE_COLUMN_ORDER should create an action to reorder the column', () => {
         const expectedAction = {
             type: types.UPDATE_COLUMN_ORDER,
             payload: { column }
         }
-        expect(actions.changeColumnOrder(column)).toEqual(expectedAction)
+        expect(actions.changeColumnOrderAction(column)).toEqual(expectedAction)
     })
-    it('should create an action to add a hidden column', () => {
+    it('UPDATE_FAKE_COLUMN should update a fake column', () => {
         const expectedAction = {
-            type: types.ADD_HIDDEN_COLUMN,
+            type: types.UPDATE_FAKE_COLUMN,
             payload: { column }
         }
-        expect(actions.addHiddenColumn(column)).toEqual(expectedAction)
+        expect(actions.updateFakeColumnAction(column)).toEqual(expectedAction)
+    })
+    it('CLEAR_PENDING_ACTIONS should clear pending actions', () => {
+        const expectedAction = {
+            type: types.CLEAR_PENDING_ACTIONS,
+            payload: {}
+        }
+        expect(actions.clearPendingActions()).toEqual(expectedAction)
     })
 })
 
 describe('async actions', () => {
-    let column = { id: 1, title: "Test Column 1", userId: 1, position: 2, hidden: false, Task: [1, 2, 3], hiddenTasks: [4, 5, 6] }
+    let column: ColumnWithTasks = { id: 1, title: "Test Column 1", userId: 1, position: 2, Task: [1, 2, 3] }
 
     it('patchColumn calls UPDATE_COLUMN_ORDER', () => {
         let mockedRequest = axios.request as jest.Mock
@@ -53,20 +62,20 @@ describe('async actions', () => {
             { type: types.UPDATE_COLUMN_ORDER, payload: { column } },
         ]
         const store = mockStore({})
-        return store.dispatch(actions.patchColumn(column)).then(() => {
+        return store.dispatch(actions.patchColumnRequest(column)).then(() => {
             expect(store.getActions()).toEqual(expectedActions)
         })
     })
-    it('patchUnhideColumn calls ADD_COLUMN and then ADD_HIDDEN_COLUMN', () => {
-        let newHiddenColumn = { id: 2, title: "Test Column 2", userId: 1, position: null, hidden: true, Task: [], hiddenTasks: [] }
+    it('postColumn calls ADD_COLUMN and then UPDATE_FAKE_COLUMN', () => {
+        let newColumn: ColumnWithTasks = { id: 2, title: "Test Column 2", userId: 1, position: 0, Task: [] }
         let mockedRequest = axios.request as jest.Mock
-        mockedRequest.mockResolvedValue({ data: newHiddenColumn });
+        mockedRequest.mockResolvedValue({ data: newColumn });
         const expectedActions = [
-            { type: types.ADD_COLUMN, payload: { column } },
-            { type: types.ADD_HIDDEN_COLUMN, payload: { column: newHiddenColumn } },
+            { type: types.ADD_COLUMN, payload: {} },
+            { type: types.UPDATE_FAKE_COLUMN, payload: { column: newColumn } },
         ]
         const store = mockStore({})
-        return store.dispatch(actions.patchUnhideColumn(column)).then(() => {
+        return store.dispatch(actions.postColumnRequest(0)).then(() => {
             expect(store.getActions()).toEqual(expectedActions)
         })
     })

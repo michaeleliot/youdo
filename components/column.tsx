@@ -5,8 +5,8 @@ import React from 'react'
 import { Button } from '@material-ui/core'
 import EditableLabel from 'react-inline-editing';
 import { useSelector } from 'react-redux'
-import { deleteColumn, patchColumn } from '../redux/actions/column_actions'
-import { patchUnhideTask } from '../redux/actions/taskActions'
+import { deleteColumn, patchColumnRequest } from '../redux/actions/column_actions'
+import { postTask } from '../redux/actions/task_actions'
 
 import { useDispatch } from 'react-redux'
 import { ColumnWithTasks, Task as TaskType } from '../types'
@@ -19,17 +19,17 @@ type ColumnProps = {
 function useState() {
     let dispatch = useDispatch()
     const taskObject = useSelector((state) => state.trello.taskObject)
-    let updateColumnTitle = (title: string, column: ColumnWithTasks) => dispatch(patchColumn({ ...column, title }))
+    let updateColumnTitle = (title: string, column: ColumnWithTasks) => dispatch(patchColumnRequest({ ...column, title }))
     let removeColumn = (column: ColumnWithTasks) => dispatch(deleteColumn(column))
-    let unhideTask = (task: TaskType) => dispatch(patchUnhideTask(task))
-    return { updateColumnTitle, removeColumn, unhideTask, taskObject }
+    let addTask = (columnId: number, position: number) => dispatch(postTask(columnId, position))
+    return { updateColumnTitle, removeColumn, addTask, taskObject }
 }
 
 function Column({ column, index }: ColumnProps) {
-    let { updateColumnTitle, removeColumn, unhideTask, taskObject } = useState()
+    let { updateColumnTitle, removeColumn, addTask, taskObject } = useState()
 
     return (
-        <Draggable draggableId={"column-" + column.id} index={index}>
+        <Draggable draggableId={"column:" + column.id} index={index}>
             {
                 provided => (
                     < div {...provided.draggableProps} ref={provided.innerRef} className={styles.container}>
@@ -47,7 +47,7 @@ function Column({ column, index }: ColumnProps) {
                             />
                         </div>
 
-                        <Button color='secondary' onClick={() => !column.isFake ? removeColumn(column) : console.log("column is fake")}>Delete Column</Button>
+                        <Button color='secondary' onClick={() => removeColumn(column)}>Delete Column</Button>
                         <Droppable droppableId={"column-" + column.id} type='task'>
                             {
                                 (provided, snapshot) => (
@@ -68,12 +68,11 @@ function Column({ column, index }: ColumnProps) {
                                 )
                             }
                         </Droppable>
-                        <Button onClick={() => unhideTask({
-                            ...taskObject[column.hiddenTasks.pop()],
-                            hidden: false,
-                            position: column.Task.length,
-                            columnId: column.id
-                        })}>Add</Button>
+                        {
+                            column.isFake &&
+                            <div> Please Wait While Task Loads </div>
+                        }
+                        <Button onClick={() => !column.isFake ? addTask(column.id, column.Task.length) : console.log("did not make task because column is fake")}>Add</Button>
                     </div>
                 )
             }

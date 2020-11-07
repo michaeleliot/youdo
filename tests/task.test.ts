@@ -11,13 +11,13 @@ const middlewares = [thunk]
 const mockStore = configureMockStore(middlewares)
 
 describe('actions', () => {
-    const task = { id: 1, description: "Test Task", columnId: 1, position: 0, hidden: false, completed: false }
+    const task = { id: 1, description: "Test Task", columnId: 1, position: 0, completed: false }
     it('should create an action to add a task', () => {
         const expectedAction = {
             type: types.ADD_TASK,
-            payload: { task }
+            payload: { columnId: task.columnId }
         }
-        expect(actions.addTask(task)).toEqual(expectedAction)
+        expect(actions.addTask(task.columnId)).toEqual(expectedAction)
     })
     it('should create an action to delete a column', () => {
         const expectedAction = {
@@ -33,17 +33,17 @@ describe('actions', () => {
         }
         expect(actions.changeTaskOrder(task)).toEqual(expectedAction)
     })
-    it('should create an action to add a hidden column', () => {
+    it('should create an action to update a fake task', () => {
         const expectedAction = {
-            type: types.ADD_HIDDEN_TASK,
+            type: types.UPDATE_FAKE_TASK,
             payload: { task }
         }
-        expect(actions.addHiddenTask(task)).toEqual(expectedAction)
+        expect(actions.updateFakeTask(task)).toEqual(expectedAction)
     })
 })
 
 describe('async actions', () => {
-    let task = { id: 1, description: "Test Task 1", columnId: 1, position: 0, hidden: false, completed: false }
+    let task = { id: 1, description: "Test Task 1", columnId: 1, position: 0, completed: false }
     it('patchTask calls UPDATE_TASK_ORDER', () => {
         let mockedRequest = axios.request as jest.Mock
         mockedRequest.mockResolvedValue({ data: task });
@@ -55,16 +55,15 @@ describe('async actions', () => {
             expect(store.getActions()).toEqual(expectedActions)
         })
     })
-    it('patchUnhideColumn calls ADD_COLUMN and then ADD_HIDDEN_COLUMN', () => {
-        let newHiddenTask = { id: 2, description: "Test Task 2", columnId: 1, position: null, hidden: true, completed: false }
+    it('patchUnhideColumn calls ADD_COLUMN and then UPDATE_FAKE_TASK', () => {
         let mockedRequest = axios.request as jest.Mock
-        mockedRequest.mockResolvedValue({ data: newHiddenTask });
+        mockedRequest.mockResolvedValue({ data: task });
         const expectedActions = [
-            { type: types.ADD_TASK, payload: { task } },
-            { type: types.ADD_HIDDEN_TASK, payload: { task: newHiddenTask } },
+            { type: types.ADD_TASK, payload: { columnId: 1 } },
+            { type: types.UPDATE_FAKE_TASK, payload: { task } },
         ]
         const store = mockStore({})
-        return store.dispatch(actions.patchUnhideTask(task)).then(() => {
+        return store.dispatch(actions.postTask(task.columnId, 0)).then(() => {
             expect(store.getActions()).toEqual(expectedActions)
         })
     })

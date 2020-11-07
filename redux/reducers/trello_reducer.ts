@@ -1,7 +1,7 @@
 import { HYDRATE } from 'next-redux-wrapper';
 import { ColumnWithTasks, Task } from '../../types';
-import { UPDATE_TASK_ORDER, ADD_TASK, ADD_HIDDEN_TASK, DELETE_TASK } from '../actions/task_types';
-import { UPDATE_COLUMN_ORDER, ADD_COLUMN, UPDATE_FAKE_COLUMN, DELETE_COLUMN } from '../actions/column_types';
+import { UPDATE_TASK_ORDER, ADD_TASK, UPDATE_FAKE_TASK, DELETE_TASK } from '../actions/task_types';
+import { UPDATE_COLUMN_ORDER, ADD_COLUMN, UPDATE_FAKE_COLUMN, DELETE_COLUMN, CLEAR_PENDING_ACTIONS } from '../actions/column_types';
 
 export interface TrelloState {
     columns: number[],
@@ -13,6 +13,7 @@ export interface TrelloState {
     taskObject: {
         [key: number]: Task;
     }
+    pendingActions: any[],
 }
 
 const initialState: TrelloState = {
@@ -20,7 +21,8 @@ const initialState: TrelloState = {
     fakeColumnId: -1,
     fakeTaskId: -1,
     columnObject: {},
-    taskObject: {}
+    taskObject: {},
+    pendingActions: [],
 }
 
 const trelloReducer = (state = initialState, action): TrelloState => {
@@ -29,6 +31,7 @@ const trelloReducer = (state = initialState, action): TrelloState => {
             // Attention! This will overwrite client state! Real apps should use proper reconciliation.
             return { ...state, ...action.payload };
         case UPDATE_TASK_ORDER: {
+            //TODO Update this so that it will add effected columns to batch update
             let { task } = action.payload
             const column = state.columnObject[task.columnId]
             const oldTask = state.taskObject[task.id]
@@ -87,6 +90,7 @@ const trelloReducer = (state = initialState, action): TrelloState => {
             columnCopy.splice(oldColumn.position, 1)
             columnCopy.splice(column.position, 0, oldColumn.id)
             columnCopy.forEach((columnId, index) => state.columnObject[columnId].position = index)
+            let containsFakeColumn = state.columns.findIndex(columnId => columnId < 0) != -1
             return {
                 ...state,
                 columns: columnCopy,
@@ -96,11 +100,12 @@ const trelloReducer = (state = initialState, action): TrelloState => {
                         ...oldColumn,
                         position: column.position
                     }
-                }
+                },
+                pendingActions: containsFakeColumn ? [...state.pendingActions, { column, action: "update" }] : state.pendingActions
             };
         }
         case ADD_COLUMN: {
-            let column: ColumnWithTasks = { id: state.fakeColumnId--, title: "New Column", userId: null, position: state.columns.length, Task: [] }
+            let column: ColumnWithTasks = { isFake: true, id: state.fakeColumnId--, title: "New Column", userId: null, position: state.columns.length, Task: [] }
             return {
                 ...state,
                 columns: [...state.columns, column.id],
@@ -111,25 +116,32 @@ const trelloReducer = (state = initialState, action): TrelloState => {
             };
         }
         case UPDATE_FAKE_COLUMN: {
-            /* 
-            Three things need to happen
-            * DONE The id index needs to be switched to the correct one 
-            * DONE The column object needs to have new id => new column
-            * DONE The fake column has to be deleted
-            * TODO The pending actions of the fake column need to be done
-            */
             let { column } = action.payload
             let fakeColumnToUpdateIndex = state.columns.findIndex(id => id < 0)
-            let fakeColumnToUpdateId = state.columns[fakeColumnToUpdateIndex]
-            state.columns[fakeColumnToUpdateIndex] = column.id
-            delete state.columnObject[fakeColumnToUpdateId]
-            return {
-                ...state,
-                columnObject: {
-                    ...state.columnObject,
-                    [column.id]: column
+            console.log("In UPDATE_FAKE_COLUMN", column, fakeColumnToUpdateIndex)
+            if (fakeColumnToUpdateIndex != -1) {
+                console.log("Eww gross")
+                let fakeColumnToUpdateId = state.columns[fakeColumnToUpdateIndex]
+                let fakeColumn = state.columnObject[fakeColumnToUpdateId]
+                let newColumn = { ...column, position: fakeColumn.position, Task: fakeColumn.Task }
+                state.columns[fakeColumnToUpdateIndex] = column.id
+                delete state.columnObject[fakeColumnToUpdateId]
+                return {
+                    ...state,
+                    columnObject: {
+                        ...state.columnObject,
+                        [column.id]: newColumn
+                    },
+                    pendingActions: state.pendingActions.map(action => action.column && action.column.id == fakeColumnToUpdateId ? { ...action, column: newColumn } : action)
+                };
+            } else {
+                let deletedFakeColumn: ColumnWithTasks = state.pendingActions.find(action => action.column.id < 0).column
+
+                return {
+                    ...state,
+                    pendingActions: state.pendingActions.map(action => action.column.id == deletedFakeColumn.id ? { ...action, column } : action)
                 }
-            };
+            }
         }
         case DELETE_COLUMN: {
             let { column } = action.payload
@@ -138,38 +150,46 @@ const trelloReducer = (state = initialState, action): TrelloState => {
             columns.forEach((columnId, index) => state.columnObject[columnId].position = index)
             return {
                 ...state,
-                columns
+                columns,
+                pendingActions: column.id < 0 ? [...state.pendingActions, { column, action: "delete" }] : state.pendingActions
             }
+
         }
         case ADD_TASK: {
-            let { task } = action.payload
+            let { columnId } = action.payload
+            let fakeTask: Task = {
+                id: state.fakeTaskId--,
+                position: state.columnObject[columnId].Task.length,
+                description: "New Task",
+                completed: false,
+                columnId,
+                isFake: true,
+            }
             return {
                 ...state,
                 columnObject: {
                     ...state.columnObject,
-                    [task.columnId]: {
-                        ...state.columnObject[task.columnId],
-                        Task: [...state.columnObject[task.columnId].Task, task.id]
+                    [columnId]: {
+                        ...state.columnObject[columnId],
+                        Task: [...state.columnObject[columnId].Task, fakeTask.id]
                     }
                 },
                 taskObject: {
                     ...state.taskObject,
-                    [task.id]: task
+                    [fakeTask.id]: fakeTask
                 }
             }
         }
 
-        case ADD_HIDDEN_TASK: {
+        case UPDATE_FAKE_TASK: {
             let { task } = action.payload
+            let column = state.columnObject[task.columnId]
+            let fakeTaskToUpdateIndex = column.Task.findIndex(id => id < 0)
+            let fakeTaskToUpdateId = column.Task[fakeTaskToUpdateIndex]
+            column.Task[fakeTaskToUpdateIndex] = task.id
+            delete state.taskObject[fakeTaskToUpdateId]
             return {
                 ...state,
-                columnObject: {
-                    ...state.columnObject,
-                    [task.columnId]: {
-                        ...state.columnObject[task.columnId],
-                        hiddenTasks: [...state.columnObject[task.columnId].hiddenTasks, task.id]
-                    }
-                },
                 taskObject: {
                     ...state.taskObject,
                     [task.id]: task
@@ -190,6 +210,13 @@ const trelloReducer = (state = initialState, action): TrelloState => {
                         Task
                     }
                 }
+            }
+        }
+
+        case CLEAR_PENDING_ACTIONS: {
+            return {
+                ...state,
+                pendingActions: []
             }
         }
 
