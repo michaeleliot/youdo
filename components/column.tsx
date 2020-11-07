@@ -69,10 +69,10 @@ function Column({ column, index }: ColumnProps) {
                             }
                         </Droppable>
                         {
-                            column.isFake &&
+                            column.id < 0 &&
                             <div> Please Wait While Task Loads </div>
                         }
-                        <Button onClick={() => !column.isFake ? addTask(column.id, column.Task.length) : console.log("did not make task because column is fake")}>Add</Button>
+                        <Button onClick={() => column.id >= 0 ? addTask(column.id, column.Task.length) : console.log("did not make task because column is fake")}>Add</Button>
                     </div>
                 )
             }

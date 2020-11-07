@@ -4,7 +4,6 @@ import * as types from '../redux/actions/column_types'
 import configureMockStore from 'redux-mock-store'
 import thunk from 'redux-thunk'
 import axios from 'axios'
-import { Column, ColumnWhereInput } from '@prisma/client'
 import { ColumnWithTasks } from '../types'
 
 jest.mock('axios');
@@ -36,14 +35,14 @@ describe('actions', () => {
         }
         expect(actions.changeColumnOrderAction(column)).toEqual(expectedAction)
     })
-    it('UPDATE_FAKE_COLUMN should update a fake column', () => {
+    it('UPDATE_FAKE_COLUMN should create an action to update a fake column', () => {
         const expectedAction = {
             type: types.UPDATE_FAKE_COLUMN,
             payload: { column }
         }
         expect(actions.updateFakeColumnAction(column)).toEqual(expectedAction)
     })
-    it('CLEAR_PENDING_ACTIONS should clear pending actions', () => {
+    it('CLEAR_PENDING_ACTIONS should create an action to clear pending actions', () => {
         const expectedAction = {
             type: types.CLEAR_PENDING_ACTIONS,
             payload: {}
@@ -55,14 +54,14 @@ describe('actions', () => {
 describe('async actions', () => {
     let column: ColumnWithTasks = { id: 1, title: "Test Column 1", userId: 1, position: 2, Task: [1, 2, 3] }
 
-    it('patchColumn calls UPDATE_COLUMN_ORDER', () => {
+    it('updateColumnPosition calls UPDATE_COLUMN_ORDER', () => {
         let mockedRequest = axios.request as jest.Mock
         mockedRequest.mockResolvedValue({ data: column });
         const expectedActions = [
             { type: types.UPDATE_COLUMN_ORDER, payload: { column } },
         ]
         const store = mockStore({})
-        return store.dispatch(actions.patchColumnRequest(column)).then(() => {
+        return store.dispatch(actions.updateColumnPosition(column)).then(() => {
             expect(store.getActions()).toEqual(expectedActions)
         })
     })

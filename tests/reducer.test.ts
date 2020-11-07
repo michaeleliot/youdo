@@ -55,7 +55,6 @@ describe('trello reducer - column actions', () => {
                     userId: null,
                     position: 3,
                     Task: [],
-                    isFake: true
                 }
             },
             fakeColumnId: -2,
@@ -101,7 +100,6 @@ describe('trello reducer - column actions', () => {
             userId: null,
             position: 3,
             Task: [],
-            isFake: true
         }
         testState = reducer(testState, {
             type: column_types.ADD_COLUMN,
@@ -138,7 +136,6 @@ describe('trello reducer - column actions', () => {
             userId: null,
             position: 1,
             Task: [],
-            isFake: true
         }
         testState = reducer(testState, {
             type: column_types.ADD_COLUMN,

@@ -105,7 +105,7 @@ const trelloReducer = (state = initialState, action): TrelloState => {
             };
         }
         case ADD_COLUMN: {
-            let column: ColumnWithTasks = { isFake: true, id: state.fakeColumnId--, title: "New Column", userId: null, position: state.columns.length, Task: [] }
+            let column: ColumnWithTasks = { id: state.fakeColumnId--, title: "New Column", userId: null, position: state.columns.length, Task: [] }
             return {
                 ...state,
                 columns: [...state.columns, column.id],
@@ -118,9 +118,7 @@ const trelloReducer = (state = initialState, action): TrelloState => {
         case UPDATE_FAKE_COLUMN: {
             let { column } = action.payload
             let fakeColumnToUpdateIndex = state.columns.findIndex(id => id < 0)
-            console.log("In UPDATE_FAKE_COLUMN", column, fakeColumnToUpdateIndex)
             if (fakeColumnToUpdateIndex != -1) {
-                console.log("Eww gross")
                 let fakeColumnToUpdateId = state.columns[fakeColumnToUpdateIndex]
                 let fakeColumn = state.columnObject[fakeColumnToUpdateId]
                 let newColumn = { ...column, position: fakeColumn.position, Task: fakeColumn.Task }

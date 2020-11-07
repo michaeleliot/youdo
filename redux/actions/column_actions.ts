@@ -45,7 +45,7 @@ export const completePendingRequests = (arr: any[]): any => {
 }
 
 export const updateColumnPosition = (column: ColumnWithTasks) => {
-    if (column.isFake) {
+    if (column.id < 0) {
         return changeColumnOrderAction(column)
     }
     return patchColumnRequest(column, () => changeColumnOrderAction(column))
@@ -81,7 +81,7 @@ export const postColumnRequest = (position: number): (dispatch: Dispatch<any>) =
 }
 
 export const deleteColumn = (column: ColumnWithTasks) => {
-    if (column.isFake) {
+    if (column.id < 0) {
         return removeColumnAction(column)
     }
     return deleteColumnRequest(column, () => removeColumnAction(column))

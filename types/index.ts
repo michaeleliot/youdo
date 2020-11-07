@@ -1,6 +1,6 @@
 import { Column, Task as TaskType } from '@prisma/client'
 
-export type ColumnWithTasks = Column & { Task: number[], pendingActions?: [], isFake?: boolean }
+export type ColumnWithTasks = Column & { Task: number[], pendingActions?: [] }
 
 export interface ReduxAction {
     type: string
