@@ -9,7 +9,7 @@ import { deleteColumn, patchColumnRequest } from '../redux/actions/column_action
 import { postTask } from '../redux/actions/task_actions'
 
 import { useDispatch } from 'react-redux'
-import { ColumnWithTasks, Task as TaskType } from '../types'
+import { ColumnWithTasks } from '../types'
 
 type ColumnProps = {
     column: ColumnWithTasks,
@@ -68,10 +68,6 @@ function Column({ column, index }: ColumnProps) {
                                 )
                             }
                         </Droppable>
-                        {
-                            column.id < 0 &&
-                            <div> Please Wait While Task Loads </div>
-                        }
                         <Button onClick={() => column.id >= 0 ? addTask(column.id, column.Task.length) : console.log("did not make task because column is fake")}>Add</Button>
                     </div>
                 )

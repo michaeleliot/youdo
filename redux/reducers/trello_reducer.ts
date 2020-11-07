@@ -59,7 +59,8 @@ const trelloReducer = (state = initialState, action): TrelloState => {
                             ...state.columnObject[oldColumn.id],
                             Task: oldTaskCopy
                         }
-                    }
+                    },
+                    pendingActions: task.id < 0 ? [...state.pendingActions, { task, action: "update" }] : state.pendingActions
                 };
             } else {
                 let taskCopy = [...column.Task]
@@ -78,7 +79,8 @@ const trelloReducer = (state = initialState, action): TrelloState => {
                             ...state.columnObject[column.id],
                             Task: taskCopy
                         }
-                    }
+                    },
+                    pendingActions: task.id < 0 ? [...state.pendingActions, { task, action: "update" }] : state.pendingActions
                 };
             }
 
@@ -90,7 +92,6 @@ const trelloReducer = (state = initialState, action): TrelloState => {
             columnCopy.splice(oldColumn.position, 1)
             columnCopy.splice(column.position, 0, oldColumn.id)
             columnCopy.forEach((columnId, index) => state.columnObject[columnId].position = index)
-            let containsFakeColumn = state.columns.findIndex(columnId => columnId < 0) != -1
             return {
                 ...state,
                 columns: columnCopy,
@@ -101,7 +102,7 @@ const trelloReducer = (state = initialState, action): TrelloState => {
                         position: column.position
                     }
                 },
-                pendingActions: containsFakeColumn ? [...state.pendingActions, { column, action: "update" }] : state.pendingActions
+                pendingActions: column.id < 0 ? [...state.pendingActions, { column, action: "update" }] : state.pendingActions
             };
         }
         case ADD_COLUMN: {
@@ -133,11 +134,10 @@ const trelloReducer = (state = initialState, action): TrelloState => {
                     pendingActions: state.pendingActions.map(action => action.column && action.column.id == fakeColumnToUpdateId ? { ...action, column: newColumn } : action)
                 };
             } else {
-                let deletedFakeColumn: ColumnWithTasks = state.pendingActions.find(action => action.column.id < 0).column
-
+                let deletedFakeColumn: ColumnWithTasks = state.pendingActions.find(action => action.column && action.column.id < 0).column
                 return {
                     ...state,
-                    pendingActions: state.pendingActions.map(action => action.column.id == deletedFakeColumn.id ? { ...action, column } : action)
+                    pendingActions: state.pendingActions.map(action => action.column && action.column.id == deletedFakeColumn.id ? { ...action, column } : action)
                 }
             }
         }
@@ -161,7 +161,6 @@ const trelloReducer = (state = initialState, action): TrelloState => {
                 description: "New Task",
                 completed: false,
                 columnId,
-                isFake: true,
             }
             return {
                 ...state,
@@ -181,16 +180,25 @@ const trelloReducer = (state = initialState, action): TrelloState => {
 
         case UPDATE_FAKE_TASK: {
             let { task } = action.payload
-            let column = state.columnObject[task.columnId]
-            let fakeTaskToUpdateIndex = column.Task.findIndex(id => id < 0)
-            let fakeTaskToUpdateId = column.Task[fakeTaskToUpdateIndex]
-            column.Task[fakeTaskToUpdateIndex] = task.id
-            delete state.taskObject[fakeTaskToUpdateId]
-            return {
-                ...state,
-                taskObject: {
-                    ...state.taskObject,
-                    [task.id]: task
+            let fakeTaskToUpdateId = Object.keys(state.taskObject).find(id => Number(id) < 0)
+            if (fakeTaskToUpdateId != undefined) {
+                let fakeTask = state.taskObject[fakeTaskToUpdateId]
+                let newTask = { ...task, position: fakeTask.position, columnId: fakeTask.columnId }
+                state.columnObject[newTask.columnId].Task[newTask.position] = newTask.id
+                delete state.taskObject[fakeTaskToUpdateId]
+                return {
+                    ...state,
+                    taskObject: {
+                        ...state.taskObject,
+                        [task.id]: newTask
+                    },
+                    pendingActions: state.pendingActions.map(action => action.task && action.task.id == fakeTaskToUpdateId ? { ...action, task: newTask } : action)
+                }
+            } else {
+                let deletedFakeTask: ColumnWithTasks = state.pendingActions.find(action => action.task && action.task.id < 0).task
+                return {
+                    ...state,
+                    pendingActions: state.pendingActions.map(action => action.task && action.task.id == deletedFakeTask.id ? { ...action, task } : action)
                 }
             }
         }
@@ -207,7 +215,8 @@ const trelloReducer = (state = initialState, action): TrelloState => {
                         ...state.columnObject[task.columnId],
                         Task
                     }
-                }
+                },
+                pendingActions: task.id < 0 ? [...state.pendingActions, { task, action: "delete" }] : state.pendingActions
             }
         }
 

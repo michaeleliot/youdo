@@ -5,7 +5,7 @@ import React from 'react'
 import { Button } from '@material-ui/core'
 import { useSelector, useDispatch } from 'react-redux'
 import { postColumnRequest, completePendingRequests, updateColumnPosition } from '../redux/actions/column_actions'
-import { patchTask } from '../redux/actions/task_actions'
+import { updateTask } from '../redux/actions/task_actions'
 import { ColumnWithTasks, Task } from '../types'
 
 function useState() {
@@ -16,14 +16,14 @@ function useState() {
         columns.length > 0
         && !columns.includes(colId => colId < 0)
         && pendingActions.length > 0
-        && pendingActions.findIndex(action => action.column.id < 0) == -1
+        && pendingActions.findIndex(action => (action.column && action.column.id < 0) || (action.task && action.task.id < 0)) == -1
     ) {
         dispatch(completePendingRequests(pendingActions))
     }
     const columnObject = useSelector((state) => state.trello.columnObject)
     const taskObject = useSelector((state) => state.trello.taskObject)
     let addColumn = (position: number) => dispatch(postColumnRequest(position))
-    let reorderTask = (task: Task) => dispatch(patchTask(task))
+    let reorderTask = (task: Task) => dispatch(updateTask(task))
     let reorderColumn = (column: ColumnWithTasks) => dispatch(updateColumnPosition(column))
     return { columns, columnObject, taskObject, addColumn, reorderTask, reorderColumn }
 }
@@ -52,9 +52,7 @@ export default function Trello() {
         let taskId = Number(draggableId.split(":")[1])
         let columnId = Number(destination.droppableId.split("-")[1])
         let updatedTask = { ...taskObject[taskId], position: destination.index, columnId }
-        if (!taskObject[taskId].isFake) {
-            reorderTask(updatedTask)
-        }
+        reorderTask(updatedTask)
     }
 
     const onDragStart = () => {

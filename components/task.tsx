@@ -3,7 +3,7 @@ import { Draggable } from 'react-beautiful-dnd'
 import React from 'react'
 import EditableLabel from 'react-inline-editing';
 import { Button } from '@material-ui/core';
-import { deleteTask, patchTask } from '../redux/actions/task_actions';
+import { deleteTask, updateTask } from '../redux/actions/task_actions';
 import { useDispatch } from 'react-redux'
 import { Task } from '../types';
 
@@ -14,7 +14,7 @@ type TaskProps = {
 
 function useState() {
     let dispatch = useDispatch()
-    let updateTaskDescription = (description: string, task: Task) => dispatch(patchTask({ ...task, description }))
+    let updateTaskDescription = (description: string, task: Task) => dispatch(updateTask({ ...task, description }))
     let removeTask = (task: Task) => dispatch(deleteTask(task))
     return { updateTaskDescription, removeTask }
 }
@@ -41,15 +41,11 @@ export default function TaskView({ task, index }: TaskProps) {
                             inputMin
                             onFocus={(text) => (console.log("OnFocus"))}
                             onFocusOut={(text) => {
-                                task.description != text && !task.isFake ? updateTaskDescription(text, task) : console.log("Did not update")
+                                task.description != text ? updateTaskDescription(text, task) : console.log("Did not update")
                             }}
                         />
-                        {
-                            task.isFake &&
-                            <div> Please Wait While Task Loads </div>
-                        }
-                        <Button color='secondary' onClick={() => !task.isFake ? removeTask(task) : console.log("did not delete because task is fake")}> Delete </Button>
-                        <Button color='primary' onClick={() => !task.isFake ? removeTask(task) : console.log("did not complete because task is fake")}> Complete </Button>
+                        <Button color='secondary' onClick={() => removeTask(task)}> Delete </Button>
+                        <Button color='primary' onClick={() => removeTask(task)}> Complete </Button>
                     </div>
                 )
             }

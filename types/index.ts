@@ -7,7 +7,7 @@ export interface ReduxAction {
     payload: Object
 }
 
-export type Task = TaskType & { pendingActions?: [], isFake?: boolean }
+export type Task = TaskType & { pendingActions?: [] }
 
 export type ColumnReduxAction = (column: ColumnWithTasks) => ReduxAction;
 export type TaskReduxAction = (column: Task) => ReduxAction;

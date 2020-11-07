@@ -25,14 +25,21 @@ export const changeTaskOrder: TaskReduxAction = (task) => ({
     payload: { task }
 })
 
-export const patchTask = (task: Task): (dispatch: Dispatch<any>) => Promise<void> => {
+export const updateTask = (task: Task) => {
+    if (task.id < 0) {
+        return changeTaskOrder(task)
+    }
+    return patchTaskRequest(task, () => changeTaskOrder(task))
+}
+
+export const patchTaskRequest = (task: Task, onStart = null, onSuccess = null, onError = null): (dispatch: Dispatch<any>) => Promise<void> => {
     return (dispatch: Dispatch<any>): Promise<void> => {
         return apimiddleware(
             {
                 url: taskBaseEndpoint + "/" + task.id,
                 method: "PATCH",
                 data: JSON.stringify(task),
-                onStart: () => changeTaskOrder(task),
+                onStart,
             },
             dispatch
         )
@@ -54,13 +61,20 @@ export const postTask = (columnId: number, position: number): (dispatch: Dispatc
     }
 };
 
-export const deleteTask = (task: Task): (dispatch: Dispatch<any>) => Promise<void> => {
+export const deleteTask = (task: Task) => {
+    if (task.id < 0) {
+        return removeTask(task)
+    }
+    return deleteTaskRequest(task, () => removeTask(task))
+}
+
+export const deleteTaskRequest = (task: Task, onStart = null, onSuccess = null, onError = null): (dispatch: Dispatch<any>) => Promise<void> => {
     return (dispatch: Dispatch<any>): Promise<void> => {
         return apimiddleware(
             {
                 url: taskBaseEndpoint + "/" + task.id,
                 method: "DELETE",
-                onStart: () => removeTask(task),
+                onStart,
             },
             dispatch
         )

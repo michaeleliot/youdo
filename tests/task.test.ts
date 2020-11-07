@@ -51,7 +51,7 @@ describe('async actions', () => {
             { type: types.UPDATE_TASK_ORDER, payload: { task } },
         ]
         const store = mockStore({})
-        return store.dispatch(actions.patchTask(task)).then(() => {
+        return store.dispatch(actions.updateTask(task)).then(() => {
             expect(store.getActions()).toEqual(expectedActions)
         })
     })

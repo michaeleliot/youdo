@@ -3,6 +3,7 @@ import { ColumnWithTasks, ColumnReduxAction, ReduxAction } from "../../types";
 import { apimiddleware } from "../../lib/apimiddleware";
 import { UPDATE_FAKE_COLUMN, ADD_COLUMN, DELETE_COLUMN, UPDATE_COLUMN_ORDER, CLEAR_PENDING_ACTIONS } from "./column_types";
 import { ThunkAction, ThunkDispatch } from "redux-thunk";
+import { deleteTaskRequest, patchTaskRequest } from "./task_actions";
 
 const columnBaseEndpoint = "http://localhost:3000/api/column"
 
@@ -34,11 +35,20 @@ export const changeColumnOrderAction: ColumnReduxAction = (column) => ({
 export const completePendingRequests = (arr: any[]): any => {
     return (dispatch: Dispatch<any>): any => {
         for (let action of arr) {
-            if (action.action == "delete") {
-                dispatch(deleteColumnRequest(action.column))
-            } else if (action.action == "update") {
-                dispatch(patchColumnRequest(action.column))
+            if (action.column) {
+                if (action.action == "delete") {
+                    dispatch(deleteColumnRequest(action.column))
+                } else if (action.action == "update") {
+                    dispatch(patchColumnRequest(action.column))
+                }
+            } else {
+                if (action.action == "delete") {
+                    dispatch(deleteTaskRequest(action.column))
+                } else if (action.action == "update") {
+                    dispatch(patchTaskRequest(action.column))
+                }
             }
+
         }
         dispatch(clearPendingActions())
     }

@@ -113,9 +113,6 @@ describe('trello reducer - column actions', () => {
         expect(testStateAfterDelete).toEqual({
             ...testState,
             columns: [1, 2, 3],
-            columnObject: {
-                ...testState.columnObject
-            },
             pendingActions: [{ column: newFakeColumn, action: "delete" }]
         })
 
@@ -220,7 +217,6 @@ describe('trello reducer - task actions', () => {
                     description: "New Task",
                     completed: false,
                     columnId: 1,
-                    isFake: true
                 }
             },
             fakeTaskId: -2
@@ -299,6 +295,102 @@ describe('trello reducer - task actions', () => {
                 ...testState.taskObject,
                 7: seventhTask,
             }
+        })
+    })
+
+    it('should handle DELETE_TASK on a fake task, and that pending delete should be updated on UPDATE_FAKE_TASK', () => {
+        let newFakeTask: Task = {
+            id: -1,
+            position: 3,
+            description: "New Task",
+            completed: false,
+            columnId: 1,
+        }
+        testState = reducer(testState, {
+            type: task_types.ADD_TASK,
+            payload: { columnId: 1 }
+        })
+
+        let testStateAfterDelete = reducer(testState, {
+            type: task_types.DELETE_TASK,
+            payload: { task: newFakeTask }
+        })
+        expect(testStateAfterDelete).toEqual({
+            ...testState,
+            columnObject: {
+                ...testState.columnObject,
+                1: {
+                    ...testState.columnObject[1],
+                    Task: [1, 2, 3]
+                }
+            },
+            pendingActions: [{ task: newFakeTask, action: "delete" }]
+        })
+
+        let newTask: Task = { id: 7, description: "New Task", completed: false, columnId: 1, position: 3 }
+
+        expect(reducer(testStateAfterDelete, {
+            type: task_types.UPDATE_FAKE_TASK,
+            payload: { task: newTask }
+        })).toEqual({
+            ...testStateAfterDelete,
+            pendingActions: [{ task: newTask, action: "delete" }]
+        })
+    })
+
+    it('should handle UPDATE_TASK_ORDER on a fake task, and that pending update should be updated on UPDATE_FAKE_TASK', () => {
+        let newFakeTask: Task = {
+            id: -1,
+            position: 0,
+            description: "New Task",
+            completed: false,
+            columnId: 2,
+        }
+        testState = reducer(testState, {
+            type: task_types.ADD_TASK,
+            payload: { columnId: 1 }
+        })
+
+        let testStateAfterUpdate = reducer(testState, {
+            type: task_types.UPDATE_TASK_ORDER,
+            payload: { task: newFakeTask }
+        })
+        expect(testStateAfterUpdate).toEqual({
+            ...testState,
+            columnObject: {
+                ...testState.columnObject,
+                1: { ...testState.columnObject[1], Task: [1, 2, 3] },
+                2: { ...testState.columnObject[2], Task: [-1] },
+            },
+            taskObject: {
+                ...testState.taskObject,
+                "-1": { ...newFakeTask, position: 0, columnId: 2 },
+            },
+            pendingActions: [{ task: newFakeTask, action: "update" }]
+        })
+
+        let newTask: Task = { id: 7, description: "New Task", completed: false, columnId: 1, position: 3 }
+        let testStateAfterServer = reducer(testStateAfterUpdate, {
+            type: task_types.UPDATE_FAKE_TASK,
+            payload: { task: newTask }
+        })
+        expect(testStateAfterServer).toEqual({
+            ...testStateAfterUpdate,
+            columnObject: {
+                ...testStateAfterUpdate.columnObject,
+                2: { ...testState.columnObject[2], Task: [7] },
+            },
+            taskObject: {
+                ...testStateAfterUpdate.taskObject,
+                7: { ...newTask, position: 0, columnId: 2 },
+            },
+            pendingActions: [{
+                task: {
+                    ...newTask,
+                    position: 0,
+                    columnId: 2,
+                }, action: "update"
+            }]
         })
     })
 })
